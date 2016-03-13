@@ -1,0 +1,1 @@
+Parsing referential expressions for the Baxter research robot. A class project for Brown University CSCI2971K, by Roshan Rao, Eli Sharf, and Edward Williams. 
