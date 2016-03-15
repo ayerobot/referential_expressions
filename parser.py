@@ -15,11 +15,17 @@ units = {"A" : 1, "a" : 1, "an" : 1, "An" : 1, "one" : 1,
 			"eighteen" : 18, "nineteen" : 19}
 
 tens = {"twenty" : 20, "thirty" : 30, "forty" : 40, "fifty" : 50, "sixty" : 60, "seventy" : 70, "eighty" : 80, "ninety" : 90}
+ 
+fractions = {"and a quarter" : .25, "and one quarter" : .25, "and a half" : .5, "and one half" : .5, "and three quarters" : .75}
 
-fractions = {"quarter" : .25, "half" : .5, "quarters" : .75}
+fractionsRegEx = "and (three quarters|(one|a) half|(one|a) quarter)"
 
+def parse_number(words, command):
+	""" parsers numeral words
 
-def parseNumber(words):
+	input: the language commmand, the list of words in the command
+
+	"""
 	# length of word
 	l = 0
 	# index of word
@@ -45,14 +51,16 @@ def parseNumber(words):
 			print (words[i] + " is not a valid number.")
 			return None, 0
 
-	if words[i] == "and":
-		l += 4
-		if words[i+2] in fractions:
-			N += fractions[words[i+2]]
-			l += len(words[i+1]) + 1 + len(words[i+2]) + 1
-			i += 3
+	print (command[l:])
+	fraction = re.match(fractionsRegEx, command[l:])
+	if (fraction != None):
+		F = fraction.group(0)
+		N += fractions[F]
+		i += 4
+		l += len(F) + 1
 
-	return N, i, l
+
+	return N, i, command[l:]
 
 
 measurement = {"inch" : 1, "inches" : 1, "foot" : 12, "feet" : 12}
@@ -75,11 +83,13 @@ def parse(command):
 		print("command is not in full form")
 		return
 
-	N, i, l = parseNumber(words)
+	# parse number
+	N, i, restOfCommand = parse_number(words, command)
 
 	if N == None:
 		return
 
+	# parse measurement
 	if words[i] in measurement:
 		M = words[i]
 		N *= measurement[words[i]]
@@ -88,17 +98,21 @@ def parse(command):
 		print (words[i] + " is not a measurement we handle.")
 		return
 
-	command = command[l + len(M) + 1:]
-	rel = re.match(relationsRegEx,command)
+	# parse relation
+	restOfCommand = restOfCommand[len(M) + 1:]
+	rel = re.match(relationsRegEx,restOfCommand)
 	if (rel == None):
 		print "No relations 'left of' 'right of' 'in front of' or 'behind' in command."
 		return
 
 	R = rel.group(0)
 
-	O = command[len(R) + 1:]
+	# parse object
+	O = restOfCommand[len(R) + 1:]
 
 	return N, M, R, O
+
+
 
 
 if __name__ == '__main__':
