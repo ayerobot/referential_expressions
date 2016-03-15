@@ -10,7 +10,12 @@ import matplotlib.cm as cm
 import sys
 
 """
-Loads data from points_data.csv
+Get the data by doing:
+
+	from data_vis import load_data
+	data = load_data('point_data.csv')
+
+then data is a dictionary with keys 1-12, referring to the points
 """
 def load_data(filename):
 	text = None
@@ -30,7 +35,7 @@ def load_data(filename):
 
 	return data
 
-if __name__ == '__main__':
+def visualize(data, filename=None):
 	fig, ax = plt.subplots()
 	ax.set_xlim([0, 48]) # Set x dim to 4 feet
 	ax.set_ylim([0, 36]) # Set y dim to 3 feet
@@ -43,13 +48,19 @@ if __name__ == '__main__':
 	objects = PatchCollection([keyboard, car, bowl])
 	ax.add_collection(objects)
 
-	data = load_data('point_data.csv')
-
 	colors = cm.rainbow(np.linspace(0, 1, 12))
 	for i in range(1, 13):
 		plt.scatter(data[i][:,0], data[i][:,1], c=colors[i-1])
 
-	if len(sys.argv) == 3 and sys.argv[1] == 'save':
-		plt.savefig(sys.argv[2], format='pdf')
+	if filename:
+		plt.savefig(filename, format='pdf')
 
 	plt.show()
+
+
+if __name__ == '__main__':
+	data = load_data('point_data.csv')
+	if len(sys.argv) == 3 and sys.argv[1] == 'save':
+		visualize(data, sys.argv[2])
+	else:
+		visualize(data)
