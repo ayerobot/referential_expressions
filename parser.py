@@ -101,8 +101,6 @@ def parse(command):
 	return N, M, R, O
 
 
-
-
 if __name__ == '__main__':
 
 	command = sys.argv[1]
