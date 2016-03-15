@@ -6,6 +6,7 @@ from matplotlib.patches import Circle, Wedge, Polygon
 from matplotlib.collections import PatchCollection
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+from scipy.stats import multivariate_normal
 
 import sys
 
@@ -34,6 +35,13 @@ def load_data(filename):
 		data[i] = np.array(data[i])
 
 	return data
+
+# Get cheating normal distributions
+def get_statistics(data):
+	means = {pt : np.mean(data[pt], axis=0) for pt in data}
+	covariances = {pt : np.cov(data[pt].T) for pt in data}
+	cheating_normals = {pt : multivariate_normal(means[pt], covariances[pt]) for pt in data}
+	return cheating_normals
 
 def visualize(data, filename=None):
 	fig, ax = plt.subplots()
