@@ -1,4 +1,16 @@
 # SPEECH RECOGNITION
+"""
+- install speech recognition library from https://pypi.python.org/pypi/SpeechRecognition/
+- install pyaudio via instructions on webpage above
+- install "flac" if do not have
+
+pip install SpeechRecognition
+brew install portaudio
+pip install pyaudio
+brew install flac
+
+"""
+
 
 import speech_recognition as sr
 import parser
