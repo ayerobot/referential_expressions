@@ -2,7 +2,7 @@
 
 import numpy as np
 import matplotlib
-from matplotlib.patches import Circle, Wedge, Polygon
+from matplotlib.patches import Circle, Polygon
 from matplotlib.collections import PatchCollection
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -18,26 +18,43 @@ class Command:
 		self.direction = direction
 		self.reference = reference 
 
-# All commands
-commands = {
-	1 : Command("4 inches left of the car",                      4,   np.array([-1, 0]), "car"),
-	2 : Command("1 foot left of the keyboard",                   12,  np.array([-1, 0]), "keyboard"),
-	3 : Command("1 and a half feet right of the car",            18,  np.array([1, 0]),  "car"),
-	4 : Command("4 inches in front of the pink bowl",            4,   np.array([0, -1]), "bowl"),
-	5 : Command("5 and a half inches behind the keyboard",       5.5, np.array([0, 1]),  "keyboard"),
-	6 : Command("2 inches left of the pink bowl",                2,   np.array([-1, 0]), "bowl"),
-	7 : Command("1 and a half inches behind the car",            1.5, np.array([0, 1]),  "car"),
-	8 : Command("2 feet behind the pink bowl",                   7,   np.array([1, 0]),  "bowl"),
-	9 : Command("16 inches in front of the car",                 16,  np.array([0, -1]), "car"),
-	10 : Command("2 feet behind the pink bowl",                  24,  np.array([0, 1]),  "bowl"),
-	11 : Command("3 inches right of the keyboard",               3,   np.array([1, 0]),  "keyboard"),
-	12 : Command("4 and a half inches in front of the keyboard", 4.5, np.array([0, -1]), "keyboard")
-}
+class Reference:
 
-keyboard_pos = np.array([[33.375, 13.5], [38.5, 13.5], [38, 24.625], [33, 24.375]])
-car_pos = np.array([[9.5, 21.5], [10.625, 21.25], [11.625, 24], [10.375, 24.5]])
-bowl_pos = np.array([19.75, 10])
-bowl_radius = 2.5
+	def __init__(self, name, position):
+		self.name = name
+		if isinstance(position, tuple):
+			self.position = position[0]
+			self.center = position[0]
+			self.radius = position[1]
+			self.height = 2*self.radius
+			self.width = 2*self.radius
+			self.patch = Circle(self.center, self.radius)
+		else:
+			self.position = position
+			self.center = np.mean(self.position, axis=0)
+			self.width = self.position[:,0].ptp()
+			self.height = self.position[:,1].ptp()
+			self.patch = Polygon(self.position, True)
+
+# Object dimensions and commands from https://docs.google.com/document/d/1TbAKCrdEfgD6nCEjhlpJ4BpAJcmeSajsGQwb4HBsh7U/edit
+keyboard = Reference("keyboard", np.array([[33.375, 13.5], [38.5, 13.5], [38, 24.625], [33, 24.375]]))
+car = Reference("car", np.array([[9.5, 21.5], [10.625, 21.25], [11.625, 24], [10.375, 24.5]]))
+bowl = Reference("bowl", (np.array([19.75, 10]), 2.5))
+
+commands = {
+	1 : Command("4 inches left of the car",                      4,   np.array([-1, 0]), car),
+	2 : Command("1 foot left of the keyboard",                   12,  np.array([-1, 0]), keyboard),
+	3 : Command("1 and a half feet right of the car",            18,  np.array([1, 0]),  car),
+	4 : Command("4 inches in front of the pink bowl",            4,   np.array([0, -1]), bowl),
+	5 : Command("5 and a half inches behind the keyboard",       5.5, np.array([0, 1]),  keyboard),
+	6 : Command("2 inches left of the pink bowl",                2,   np.array([-1, 0]), bowl),
+	7 : Command("1 and a half inches behind the car",            1.5, np.array([0, 1]),  car),
+	8 : Command("2 feet behind the pink bowl",                   7,   np.array([1, 0]),  bowl),
+	9 : Command("16 inches in front of the car",                 16,  np.array([0, -1]), car),
+	10 : Command("2 feet behind the pink bowl",                  24,  np.array([0, 1]),  bowl),
+	11 : Command("3 inches right of the keyboard",               3,   np.array([1, 0]),  keyboard),
+	12 : Command("4 and a half inches in front of the keyboard", 4.5, np.array([0, -1]), keyboard)
+}
 
 """
 Get the data by doing:
@@ -71,17 +88,6 @@ def get_means(data):
 def get_covariances(data):
 	return {pt : np.cov(data[pt].T) for pt in data}
 
-def get_center(tableobject):
-	global keyboard_pos, car_pos, bowl_pos
-	if tableobject == "keyboard":
-		return np.mean(keyboard_pos, axis=0)
-	elif tableobject == "car":
-		return np.mean(car_pos, axis=0)
-	elif tableobject == "bowl":
-		return bowl_pos
-	else:
-		raise ValueError("Unknown Object: " + str(tableobject))
-
 """
 Get cheating normal distributions
 
@@ -90,7 +96,7 @@ Can use cheating_normals to get probability of data -
 """
 def get_cheating_distribution(data):
 	means = get_means(data)
-	covariances = get_covairances(data)
+	covariances = get_covariances(data)
 	cheating_normals = {pt : multivariate_normal(means[pt], covariances[pt]) for pt in data}
 	return cheating_normals
 
@@ -122,37 +128,20 @@ def plot_distance_against_var_orthogonal_direction(data):
 # i = command number
 def estimated_position(i):
 	ref = commands[i].reference
-	center = get_center(ref)
-	vector = commands[i].distance*commands[i].direction
-	pos = center + vector
-	if ref == "bowl":
-		return pos + bowl_radius*commands[i].direction
-	elif ref == "keyboard":
-		if commands[i].direction[0]:
-			return pos + keyboard_pos[:,0].ptp()/2.*commands[i].direction
-		else:
-			return pos + keyboard_pos[:,1].ptp()/2.*commands[i].direction
-	elif ref == "car":
-		if commands[i].direction[0]:
-			return pos + car_pos[:,0].ptp()/2.*commands[i].direction
-		else:
-			return pos + car_pos[:,1].ptp()/2.*commands[i].direction
-	else:
-		raise ValueError("Unknown Reference: " + str(ref))
-	return center + vector
+	center = ref.center
+	direction = commands[i].direction
+	vector = commands[i].distance*direction
+	offset = ref.width/2.*direction if direction[0] else ref.height/2.*direction
+	return center + offset + vector
 
 def visualize(data, filename=None):
+	global keyboard, car, bowl
 	fig, ax = plt.subplots()
 	ax.set_xlim([0, 48]) # Set x dim to 4 feet
 	ax.set_ylim([0, 36]) # Set y dim to 3 feet
 
-	# Object dimensions from https://docs.google.com/document/d/1TbAKCrdEfgD6nCEjhlpJ4BpAJcmeSajsGQwb4HBsh7U/edit
-	keyboard = Polygon([[33.375, 13.5], [38.5, 13.5], [38, 24.625], [33, 24.375]], True)
-	car = Polygon([[9.5, 21.5], [10.625, 21.25], [11.625, 24], [10.375, 24.5]], True)
-	bowl = Circle((19.75, 10), 2.5)
-
-	objects = PatchCollection([keyboard, car, bowl])
-	objects.set_array(np.array([1, 1, 1]))
+	objects = PatchCollection([keyboard.patch, car.patch, bowl.patch])
+	objects.set_array(np.array([0, 0, 0, 1]))
 	ax.add_collection(objects)
 
 	colors = cm.rainbow(np.linspace(0, 1, 12))
@@ -167,7 +156,7 @@ def visualize(data, filename=None):
 	plt.show()
 
 def visualize_distribution(points, distribution, filename=None):
-	global keyboard_pos, car_pos, bowl_pos, bowl_radius
+	global keyboard, car, bowl
 	fig, ax = plt.subplots()
 	ax.set_xlim([0, 48]) # Set x dim to 4 feet
 	ax.set_ylim([0, 36]) # Set y dim to 3 feet
@@ -178,12 +167,7 @@ def visualize_distribution(points, distribution, filename=None):
 	pos[:, :, 1] = y
 	plt.contourf(x, y, distribution.pdf(pos))
 
-	# Object dimensions from https://docs.google.com/document/d/1TbAKCrdEfgD6nCEjhlpJ4BpAJcmeSajsGQwb4HBsh7U/edit
-	keyboard = Polygon(keyboard_pos, True)
-	car = Polygon(car_pos, True)
-	bowl = Circle(bowl_pos, bowl_radius)
-
-	objects = PatchCollection([keyboard, car, bowl], cmap=matplotlib.cm.gray, alpha=1)
+	objects = PatchCollection([keyboard.patch, car.patch, bowl.patch], cmap=matplotlib.cm.gray, alpha=1)
 	objects.set_array(np.array([1, 1, 1]))
 	ax.add_collection(objects)
 
