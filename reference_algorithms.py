@@ -87,16 +87,15 @@ def random_algorithm(cmd, world):
 #with mean equal to the "precise" point specified in the command
 #with variance in the direction of the command equal to 0.43*distance - 0.6 (derived from experimental plot of distance vs variance)
 def naive_algorithm(cmd, world):
-
 	mean = estimate_pos(cmd)
 	#variances in the command direction and in the other direction
-	variance_cmd_direction = cmd.distance*variance_scale + variance_offset
-	variance_cmd_ortho = 2 # inches hard-coding this for now, but there's definitely a relationship between it and something else
+	variance_cmd_parallel = cmd.distance*variance_scale + variance_offset
+	variance_cmd_ortho = 0.5 # inches hard-coding this for now, but there's definitely a relationship between it and something else
 
 	if cmd.direction[0]: #if the command is in the x direction
-		covar = np.array([[variance_cmd_ortho, 0], [0, variance_cmd_ortho]])
+		covar = np.array([[variance_cmd_parallel, 0], [0, variance_cmd_ortho]])
 	else:
-		covar = np.array([[variance_cmd_ortho, 0], [0, variance_cmd_direction]])
+		covar = np.array([[variance_cmd_ortho, 0], [0, variance_cmd_parallel]])
 
 	mv_dist = multivariate_normal(mean, covar)
 

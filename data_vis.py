@@ -1,5 +1,7 @@
 #!/usr/bin/env python2
 
+import sys
+
 import numpy as np
 import matplotlib
 from matplotlib.patches import Circle, Polygon
@@ -8,8 +10,9 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from scipy.stats import multivariate_normal
 from reference_algorithms import Command, Reference, World
+from reference_algorithms import cheating_algorithm, random_algorithm, naive_algorithm
 
-import sys
+
 
 # Object dimensions and commands from https://docs.google.com/document/d/1TbAKCrdEfgD6nCEjhlpJ4BpAJcmeSajsGQwb4HBsh7U/edit
 keyboard = Reference("keyboard", np.array([[33.375, 13.5], [38.5, 13.5], [38, 24.625], [33, 24.375]]))
@@ -138,8 +141,8 @@ def visualize(data, world, filename=None):
 
 	plt.show()
 
-def visualize_distribution(points, distribution, world, filename=None):
-	fig, ax = plt.subplots()
+def visualize_distribution(points, distribution, world, filename=None, block=True):
+	ax = plt.gca()
 	ax.set_xlim([0, world.xdim]) # Set x dim to 4 feet
 	ax.set_ylim([0, world.ydim]) # Set y dim to 3 feet
 
@@ -158,8 +161,31 @@ def visualize_distribution(points, distribution, world, filename=None):
 	if filename:
 		plt.savefig(filename, format='pdf')
 
-	plt.show()
+	if block:
+		plt.show()
 
+# algorithm is a string, either 'cheating', 'random', or 'naive'
+def visualize_all_distributions(data, commands, algorithm, world, filename=None):
+	fig = plt.figure()
+	distributions = None
+	if algorithm == "cheating":
+		distributions = {pts : cheating_algorithm(data[pts]) for pts in data}
+	elif algorithm == "random":
+		distributions = {cmdnum : random_algorithm(commands[cmdnum], world) for cmdnum in commands}
+	elif algorithm == "naive":
+		distributions = {cmdnum : naive_algorithm(commands[cmdnum], world) for cmdnum in commands}
+	else:
+		raise ValueError("Unknwon Algorithm: " + str(algorithm))
+
+	for i in range(1, 13):
+		plt.subplot(3, 4, i)
+		visualize_distribution(data[i], distributions[i], world, block=False)
+		plt.title(commands[i].sentence)
+
+	if filename:
+		plt.savefig(filename, format='pdf')
+
+	plt.show()
 
 if __name__ == '__main__':
 	data = load_data('point_data.csv')
