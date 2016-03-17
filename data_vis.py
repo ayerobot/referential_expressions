@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 import numpy as np
 import matplotlib
@@ -7,34 +7,9 @@ from matplotlib.collections import PatchCollection
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from scipy.stats import multivariate_normal
+from reference_algorithms import Command, Reference
 
 import sys
-
-class Command:
-
-	def __init__(self, sentence, distance, direction, reference):
-		self.sentence = sentence
-		self.distance = distance
-		self.direction = direction
-		self.reference = reference 
-
-class Reference:
-
-	def __init__(self, name, position):
-		self.name = name
-		if isinstance(position, tuple):
-			self.position = position[0]
-			self.center = position[0]
-			self.radius = position[1]
-			self.height = 2*self.radius
-			self.width = 2*self.radius
-			self.patch = Circle(self.center, self.radius)
-		else:
-			self.position = position
-			self.center = np.mean(self.position, axis=0)
-			self.width = self.position[:,0].ptp()
-			self.height = self.position[:,1].ptp()
-			self.patch = Polygon(self.position, True)
 
 # Object dimensions and commands from https://docs.google.com/document/d/1TbAKCrdEfgD6nCEjhlpJ4BpAJcmeSajsGQwb4HBsh7U/edit
 keyboard = Reference("keyboard", np.array([[33.375, 13.5], [38.5, 13.5], [38, 24.625], [33, 24.375]]))
@@ -110,6 +85,13 @@ def plot_distance_against_var_in_direction(data):
 	covariances = get_covariances(data)
 	variances_in_direction = [covariances[i][0, 0] if commands[i].direction[0] else covariances[i][1, 1] for i in range(1, 13)]
 	distance = [commands[i].distance for i in range(1, 13)]
+	#calculating line of best fit
+	line_bestfit = np.polyfit(distance, variances_in_direction, 1)
+	print "Linear fit results: slope= " + str(line_bestfit[0]) + " intercept = " + str(line_bestfit[1]) 
+	#plotting line of best fit
+	distance_range = np.linspace(0, 30)
+	bestfit_points = distance_range*line_bestfit[0] + line_bestfit[1]
+	plt.plot(distance_range, bestfit_points)
 	plt.scatter(distance, variances_in_direction)
 	ax.set_xlabel('Distance of Command (inches)')
 	ax.set_ylabel('Variance in direction of command')
