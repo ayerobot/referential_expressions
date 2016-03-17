@@ -56,7 +56,7 @@ def parse_number(words, command):
 	if (fraction != None):
 		F = fraction.group(0)
 		N += fractions[F]
-		i += 4
+		i += 3
 		l += len(F) + 1
 
 

@@ -15,23 +15,23 @@ import sys
 #TODO: relationship between "the" and object name
 keyboard = Reference("the keyboard", np.array([[33.375, 13.5], [38.5, 13.5], [38, 24.625], [33, 24.375]]))
 car = Reference("the car", np.array([[9.5, 21.5], [10.625, 21.25], [11.625, 24], [10.375, 24.5]]))
-bowl = Reference("the bowl", (np.array([19.75, 10]), 2.5))
+bowl = Reference("the pink bowl", (np.array([19.75, 10]), 2.5))
 
 world = World([keyboard, car, bowl], 48, 36)
 
 commands = {
-	1 : Command("4 inches left of the car",                      4,   np.array([-1, 0]), car),
-	2 : Command("1 foot left of the keyboard",                   12,  np.array([-1, 0]), keyboard),
-	3 : Command("1 and a half feet right of the car",            18,  np.array([1, 0]),  car),
-	4 : Command("4 inches in front of the pink bowl",            4,   np.array([0, -1]), bowl),
-	5 : Command("5 and a half inches behind the keyboard",       5.5, np.array([0, 1]),  keyboard),
-	6 : Command("2 inches left of the pink bowl",                2,   np.array([-1, 0]), bowl),
-	7 : Command("1 and a half inches behind the car",            1.5, np.array([0, 1]),  car),
-	8 : Command("2 feet behind the pink bowl",                   7,   np.array([1, 0]),  bowl),
-	9 : Command("16 inches in front of the car",                 16,  np.array([0, -1]), car),
-	10 : Command("2 feet behind the pink bowl",                  24,  np.array([0, 1]),  bowl),
-	11 : Command("3 inches right of the keyboard",               3,   np.array([1, 0]),  keyboard),
-	12 : Command("4 and a half inches in front of the keyboard", 4.5, np.array([0, -1]), keyboard)
+	1 : Command("4 inches left of the car", world),
+	2 : Command("1 foot left of the keyboard", world),
+	3 : Command("1 and a half feet right of the car",world),
+	4 : Command("4 inches in front of the pink bowl", world),
+	5 : Command("5 and a half inches behind the keyboard", world),
+	6 : Command("2 inches left of the pink bowl", world),
+	7 : Command("1 and a half inches behind the car", world),
+	8 : Command("7 inches right of the pink bowl", world ),
+	9 : Command("16 inches in front of the car", world),
+	10 : Command("2 feet behind the pink bowl",world),
+	11 : Command("3 inches right of the keyboard",world),
+	12 : Command("4 and a half inches in front of the keyboard",world)
 }
 
 """
@@ -167,4 +167,4 @@ if __name__ == '__main__':
 	if len(sys.argv) == 3 and sys.argv[1] == 'save':
 		visualize(data, sys.argv[2])
 	else:
-		visualize(data)
+		visualize(data, world)
