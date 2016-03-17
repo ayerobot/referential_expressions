@@ -7,7 +7,7 @@ from matplotlib.collections import PatchCollection
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from scipy.stats import multivariate_normal
-from reference_algorithms import Command, Reference
+from reference_algorithms import Command, Reference, World
 
 import sys
 
@@ -16,6 +16,8 @@ import sys
 keyboard = Reference("the keyboard", np.array([[33.375, 13.5], [38.5, 13.5], [38, 24.625], [33, 24.375]]))
 car = Reference("the car", np.array([[9.5, 21.5], [10.625, 21.25], [11.625, 24], [10.375, 24.5]]))
 bowl = Reference("the bowl", (np.array([19.75, 10]), 2.5))
+
+world = World([keyboard, car, bowl], 48, 36)
 
 commands = {
 	1 : Command("4 inches left of the car",                      4,   np.array([-1, 0]), car),
@@ -81,7 +83,7 @@ def get_random_distribution(data):
 	random_normals = {pt : multivariate_normal(means[pt], np.array([1, 0], [0, 1])) for pt in data}
 	return random_normals
 
-def plot_distance_against_var_in_direction(data):
+def plot_distance_parallel(data):
 	fig, ax = plt.subplots()
 	covariances = get_covariances(data)
 	variances_in_direction = [covariances[i][0, 0] if commands[i].direction[0] else covariances[i][1, 1] for i in range(1, 13)]
@@ -98,7 +100,7 @@ def plot_distance_against_var_in_direction(data):
 	ax.set_ylabel('Variance in direction of command')
 	plt.show()
 
-def plot_distance_against_var_orthogonal_direction(data):
+def plot_distance_orthogonal(data):
 	fig, ax = plt.subplots()
 	covariances = get_covariances(data)
 	variances_in_direction = [covariances[i][1, 1] if commands[i].direction[0] else covariances[i][0, 0] for i in range(1, 13)]
@@ -117,13 +119,12 @@ def estimated_position(i):
 	offset = ref.width/2.*direction if direction[0] else ref.height/2.*direction
 	return center + offset + vector
 
-def visualize(data, filename=None):
-	global keyboard, car, bowl
+def visualize(data, world, filename=None):
 	fig, ax = plt.subplots()
-	ax.set_xlim([0, 48]) # Set x dim to 4 feet
-	ax.set_ylim([0, 36]) # Set y dim to 3 feet
+	ax.set_xlim([0, world.xdim]) # Set x dim to 4 feet
+	ax.set_ylim([0, world.ydim]) # Set y dim to 3 feet
 
-	objects = PatchCollection([keyboard.patch, car.patch, bowl.patch])
+	objects = PatchCollection([ref.patch for ref in world.references])
 	objects.set_array(np.array([0, 0, 0, 1]))
 	ax.add_collection(objects)
 
@@ -138,19 +139,18 @@ def visualize(data, filename=None):
 
 	plt.show()
 
-def visualize_distribution(points, distribution, filename=None):
-	global keyboard, car, bowl
+def visualize_distribution(points, distribution, world, filename=None):
 	fig, ax = plt.subplots()
-	ax.set_xlim([0, 48]) # Set x dim to 4 feet
-	ax.set_ylim([0, 36]) # Set y dim to 3 feet
+	ax.set_xlim([0, world.xdim]) # Set x dim to 4 feet
+	ax.set_ylim([0, world.ydim]) # Set y dim to 3 feet
 
-	x, y = np.mgrid[0:48:.1, 0:36:.1]
+	x, y = np.mgrid[0:world.xdim:.1, 0:world.ydim:.1]
 	pos = np.empty(x.shape + (2,))
 	pos[:, :, 0] = x
 	pos[:, :, 1] = y
 	plt.contourf(x, y, distribution.pdf(pos))
 
-	objects = PatchCollection([keyboard.patch, car.patch, bowl.patch], cmap=matplotlib.cm.gray, alpha=1)
+	objects = PatchCollection([ref.patch for ref in world.references], cmap=matplotlib.cm.gray, alpha=1)
 	objects.set_array(np.array([1, 1, 1]))
 	ax.add_collection(objects)
 
