@@ -80,7 +80,7 @@ def get_random_distribution(data):
 	random_normals = {pt : multivariate_normal(means[pt], np.array([1, 0], [0, 1])) for pt in data}
 	return random_normals
 
-def plot_distance_against_var_in_direction(data):
+def plot_distance_parallel(data):
 	fig, ax = plt.subplots()
 	covariances = get_covariances(data)
 	variances_in_direction = [covariances[i][0, 0] if commands[i].direction[0] else covariances[i][1, 1] for i in range(1, 13)]
@@ -97,7 +97,7 @@ def plot_distance_against_var_in_direction(data):
 	ax.set_ylabel('Variance in direction of command')
 	plt.show()
 
-def plot_distance_against_var_orthogonal_direction(data):
+def plot_distance_orthogonal(data):
 	fig, ax = plt.subplots()
 	covariances = get_covariances(data)
 	variances_in_direction = [covariances[i][1, 1] if commands[i].direction[0] else covariances[i][0, 0] for i in range(1, 13)]
