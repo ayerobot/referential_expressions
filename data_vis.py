@@ -86,7 +86,7 @@ def get_random_distribution(data):
 	random_normals = {pt : multivariate_normal(means[pt], np.array([1, 0], [0, 1])) for pt in data}
 	return random_normals
 
-def plot_distance_parallel(data):
+def plot_distance_parallel(data, filename=None):
 	fig, ax = plt.subplots()
 	covariances = get_covariances(data)
 	variances_in_direction = [covariances[i][0, 0] if commands[i].direction[0] else covariances[i][1, 1] for i in range(1, 13)]
@@ -97,10 +97,15 @@ def plot_distance_parallel(data):
 	#plotting line of best fit
 	distance_range = np.linspace(0, 30)
 	bestfit_points = distance_range*line_bestfit[0] + line_bestfit[1]
-	plt.plot(distance_range, bestfit_points)
+	plt.plot(distance_range, bestfit_points, label="var = 0.43*dist - 0.59")
+	plt.legend()
 	plt.scatter(distance, variances_in_direction)
 	ax.set_xlabel('Distance of Command (inches)')
 	ax.set_ylabel('Variance in direction of command')
+
+	if filename:
+		plt.savefig(filename, format='pdf')
+
 	plt.show()
 
 def plot_distance_orthogonal(data):
@@ -157,7 +162,7 @@ def visualize_distribution(points, distribution, world, filename=None, block=Tru
 	objects.set_array(np.array([1, 1, 1]))
 	ax.add_collection(objects)
 
-	plt.scatter(points[:, 0], points[:, 1], c=np.array([1, 1, 1, 1]))
+	plt.scatter(points[:, 0], points[:, 1], c=np.array([1, 1, 1, 1]), marker='.')
 
 	if filename:
 		plt.savefig(filename, format='pdf')
@@ -167,7 +172,8 @@ def visualize_distribution(points, distribution, world, filename=None, block=Tru
 
 # algorithm is a string, either 'cheating', 'random', or 'naive'
 def visualize_all_distributions(data, commands, algorithm, world, filename=None):
-	fig = plt.figure()
+	fig = plt.figure(figsize=(18, 8))
+	fig.subplots_adjust(hspace=0.5)
 	distributions = None
 	if algorithm == "cheating":
 		distributions = {pts : cheating_algorithm(data[pts]) for pts in data}
@@ -181,7 +187,7 @@ def visualize_all_distributions(data, commands, algorithm, world, filename=None)
 	for i in range(1, 13):
 		plt.subplot(3, 4, i)
 		visualize_distribution(data[i], distributions[i], world, block=False)
-		plt.title(commands[i].sentence)
+		plt.title(commands[i].sentence, fontsize=12)
 
 	if filename:
 		plt.savefig(filename, format='pdf')
