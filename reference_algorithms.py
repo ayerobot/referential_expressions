@@ -5,6 +5,7 @@ from matplotlib.collections import PatchCollection
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from scipy.stats import multivariate_normal
+from parser import parse
 
 import sys
 
@@ -13,13 +14,20 @@ import sys
 variance_scale = 0.43
 variance_offset = -0.6
 
+#map natural language direction to direction tuples:
+lang_to_tup = {"right of":np.array([1, 0]), "left of":np.array([-1, 0]), "to the left of":np.array([-1, 0]), "to the right of":np.array([1, 0]), "in front of":np.array([0, 1]), "behind":np.array([0, -1])}
+
 class Command:
 
-	def __init__(self, sentence, distance, direction, reference):
+	def __init__(self, sentence, world):
 		self.sentence = sentence
-		self.distance = distance
-		self.direction = direction #tuple specifying x and y direction (i.e, (0, 1), (0, -1), (1, 0), (-1, 0))
-		self.reference = reference 
+		#parsing sentences
+		num, unit, direction, reference = parse(sentence)
+		self.direction = lang_to_tup[direction]
+		self.distance = num #autoconverted to inches
+		#finding the reference in the world
+		matching_references = [ref for ref in world.references if ref.name = reference]
+		self.reference = matching_references[0] 
 
 class Reference:
 
@@ -42,8 +50,9 @@ class Reference:
 class World:
 	#dimensions in inches
 	#coordinates will be relative to bottom left corner
+	#references will be a list of world objects (TODO: possibly a set or a dict?)
 	def __init__(self, references, xdim, ydim):
-		self.references=references
+		self.references= references
 		self.xdim = xdim
 		self.ydim = ydim
 
@@ -82,7 +91,7 @@ def naive_algorithm(cmd, world):
 	mean = estimate_pos(cmd)
 	#variances in the command direction and in the other direction
 	variance_cmd_direction = cmd.distance*variance_scale + variance_offset
-	variance_cmd_ortho = 2 # inches hard-coding this for now, but there's definitely a relationship between it and something else
+	variance_cmd_ortho = 0.5 # inches hard-coding this for now, but there's definitely a relationship between it and something else
 
 	if cmd.direction[0]: #if the command is in the x direction
 		covar = np.ndarray([[variance_cmd_direction, 0], [0, variance_cmd_ortho]])

@@ -12,9 +12,10 @@ from reference_algorithms import Command, Reference
 import sys
 
 # Object dimensions and commands from https://docs.google.com/document/d/1TbAKCrdEfgD6nCEjhlpJ4BpAJcmeSajsGQwb4HBsh7U/edit
-keyboard = Reference("keyboard", np.array([[33.375, 13.5], [38.5, 13.5], [38, 24.625], [33, 24.375]]))
-car = Reference("car", np.array([[9.5, 21.5], [10.625, 21.25], [11.625, 24], [10.375, 24.5]]))
-bowl = Reference("bowl", (np.array([19.75, 10]), 2.5))
+#TODO: relationship between "the" and object name
+keyboard = Reference("the keyboard", np.array([[33.375, 13.5], [38.5, 13.5], [38, 24.625], [33, 24.375]]))
+car = Reference("the car", np.array([[9.5, 21.5], [10.625, 21.25], [11.625, 24], [10.375, 24.5]]))
+bowl = Reference("the bowl", (np.array([19.75, 10]), 2.5))
 
 commands = {
 	1 : Command("4 inches left of the car",                      4,   np.array([-1, 0]), car),
