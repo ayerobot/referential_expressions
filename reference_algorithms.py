@@ -62,6 +62,15 @@ def estimate_pos(cmd):
 	offset = ref.width/2.*direction if direction[0] else ref.height/2.*direction
 	return center + offset + vector
 
+# takes in training data set for a given command and returns a numpy.multivariate_norm distribution
+# with the sample mean and covariance
+def cheating_algorithm(pts):
+	mean = np.mean(pts, axis=0)
+	covariance = np.cov(pts.T)
+
+	mv_dist = multivariate_normal(mean, covariance)
+
+	return mv_dist
 
 #takes in a command object and a world object, and returns a numpy.multivariate_norm distribution
 #with random mean and fixed covariance 
@@ -69,7 +78,7 @@ def random_algorithm(cmd, world):
 	randx = world.xdim*np.random.random_sample()
 	randy = world.ydim*np.random.random_sample()
 
-	mv_dist = multivariate_normal(np.array([randx, randy]), np.ndarray([[1, 0], [0, 1]]))
+	mv_dist = multivariate_normal(np.array([randx, randy]), np.array([[1, 0], [0, 1]]))
 
 	return mv_dist
 
@@ -85,11 +94,13 @@ def naive_algorithm(cmd, world):
 	variance_cmd_ortho = 2 # inches hard-coding this for now, but there's definitely a relationship between it and something else
 
 	if cmd.direction[0]: #if the command is in the x direction
-		covar = np.ndarray([[variance_cmd_direction, 0], [0, variance_cmd_ortho]])
+		covar = np.array([[variance_cmd_ortho, 0], [0, variance_cmd_ortho]])
 	else:
-		covar = np.ndarray([[variance_cmd_ortho, 0], [0, variance_cmd_direction]])
+		covar = np.array([[variance_cmd_ortho, 0], [0, variance_cmd_direction]])
 
 	mv_dist = multivariate_normal(mean, covar)
+
+	return mv_dist
 
 
 
