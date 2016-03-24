@@ -4,7 +4,7 @@ from matplotlib.patches import Circle, Polygon
 from matplotlib.collections import PatchCollection
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-from scipy.stats import multivariate_normal
+from scipy.stats import multivariate_normal, expon
 from parser import parse
 
 import sys
@@ -28,6 +28,9 @@ class Command:
 		#finding the reference in the world
 		matching_references = [ref for ref in world.references if ref.name == reference]
 		self.reference = matching_references[0] 
+
+	def __repr__(self):
+		return self.sentence
 
 class Reference:
 
@@ -110,6 +113,96 @@ def naive_algorithm(cmd, world):
 	mv_dist = multivariate_normal(mean, covar)
 
 	return mv_dist
+
+def naive_algorithm2(cmd, world):
+	# Calculate Covariance
+	variance_cmd_parallel = cmd.distance*variance_scale + variance_offset
+	variance_cmd_ortho = 0.5
+
+	if cmd.direction[0]:
+		covar = np.array([[variance_cmd_parallel, 0], [0, variance_cmd_ortho]])
+	else:
+		covar = np.array([[variance_cmd_ortho, 0], [0, variance_cmd_parallel]])
+
+	x, y = np.mgrid[0:world.xdim:.1, 0:world.ydim:.1]
+
+	# Calculate mean
+	est_pos = estimate_pos(cmd)
+	mean_vals = multivariate_normal(est_pos, covar).pdf(np.dstack((x, y)))
+
+	# Find Distance to closest object
+	ref_dists = {ref : np.sqrt((x - ref.center[0])**2 + (y - ref.center[1])**2) for ref in world.references}
+	min_dists = np.min(np.dstack(ref_dists[ref] for ref in ref_dists), axis=2)
+	
+
+	# Difference between distance to closest object and object reference in command
+	distance_diff = ref_dists[cmd.reference] - min_dists
+
+	exp_vals = expon.pdf(distance_diff, scale=2)
+
+	vals = mean_vals*exp_vals
+	vals = vals
+	loc = np.where(vals == vals.max())
+	mean = 0.1*np.array([loc[0][0], loc[1][0]])
+	#plt.contourf(x, y, vals)
+	#plt.show()
+
+	
+
+	mv_dist = multivariate_normal(mean, covar)
+
+	return mv_dist
+
+def test(cmd, world):
+	m1 = naive_algorithm(cmd, world).mean
+	m2 = naive_algorithm2(cmd, world).mean
+	print m1
+	print m2
+
+def test_algorithms(data, commands, world, plotrandom=False):
+	random_prob = []
+	naive_prob = []
+	naive2_prob = []
+	cheating_prob = []
+	eval_dist = lambda pointset, distribution: np.sum(np.log(distribution.pdf(data[pointset])))
+	for point_set in range(1, 13):
+		rand_dist = random_algorithm(commands[point_set], world)
+		naive_dist = naive_algorithm(commands[point_set], world)
+		naive2_dist = naive_algorithm2(commands[point_set], world)
+		cheating_dist = cheating_algorithm(data[point_set])
+
+		random_prob.append(eval_dist(point_set, rand_dist))
+		naive_prob.append(eval_dist(point_set, naive_dist))
+		naive2_prob.append(eval_dist(point_set, naive2_dist))
+		cheating_prob.append(eval_dist(point_set, cheating_dist))
+
+	probs = {"random" : np.array(random_prob), "naive" : np.array(naive_prob), "naive2" : np.array(naive2_prob), "cheating" : np.array(cheating_prob)}
+	for prob in probs:
+		if not plotrandom and prob == "random":
+			continue
+		plt.plot(np.arange(1, 13), probs[prob], label=prob)
+	plt.show()
+	return probs
+
+def eval_algorithms(algorithm_probs):
+	random_diff = algorithm_probs['cheating'] - algorithm_probs['random']
+	naive_diff = algorithm_probs['cheating'] - algorithm_probs['naive']
+	naive2_diff = algorithm_probs['cheating'] - algorithm_probs['naive2']
+	vecs = [random_diff, naive_diff, naive2_diff]
+	L1 = [np.sum(vec) for vec in vecs]
+	L2 = [np.linalg.norm(vec) for vec in vecs]
+	print "L1 Norms: ", L1
+	print "L2 Norms: ", L2
+	return (random_diff, naive_diff, naive2_diff)
+
+
+
+
+
+
+
+
+
 
 
 

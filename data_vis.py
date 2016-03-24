@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from scipy.stats import multivariate_normal
 from reference_algorithms import Command, Reference, World
-from reference_algorithms import cheating_algorithm, random_algorithm, naive_algorithm
+from reference_algorithms import cheating_algorithm, random_algorithm, naive_algorithm, naive_algorithm2
 
 
 
@@ -181,6 +181,8 @@ def visualize_all_distributions(data, commands, algorithm, world, filename=None)
 		distributions = {cmdnum : random_algorithm(commands[cmdnum], world) for cmdnum in commands}
 	elif algorithm == "naive":
 		distributions = {cmdnum : naive_algorithm(commands[cmdnum], world) for cmdnum in commands}
+	elif algorithm == "naive2":
+		distributions = {cmdnum : naive_algorithm2(commands[cmdnum], world) for cmdnum in commands}
 	else:
 		raise ValueError("Unknwon Algorithm: " + str(algorithm))
 
