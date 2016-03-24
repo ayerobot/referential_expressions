@@ -102,7 +102,7 @@ def naive_algorithm(cmd, world):
 	mean = estimate_pos(cmd)
 	#variances in the command direction and in the other direction
 
-	variance_cmd_parallel = cmd.distance*variance_scale + variance_offset
+	variance_cmd_parallel = max(cmd.distance*variance_scale + variance_offset, 0.5)
 	variance_cmd_ortho = 0.5 # inches hard-coding this for now, but there's definitely a relationship between it and something else
 
 	if cmd.direction[0]: #if the command is in the x direction
@@ -114,52 +114,59 @@ def naive_algorithm(cmd, world):
 
 	return mv_dist
 
+# Estimate new mean position
+# Find argmax_{x, y} naive_algorithm(cmd, world)*1/scale*e^{||(x, y) - (x_ref, y_ref)|| - min_{obj}||(x, y) - (x_obj, y_obj)||/scale}
 def naive_algorithm2(cmd, world):
-	# Calculate Covariance
-	variance_cmd_parallel = cmd.distance*variance_scale + variance_offset
-	variance_cmd_ortho = 0.5
-
-	if cmd.direction[0]:
-		covar = np.array([[variance_cmd_parallel, 0], [0, variance_cmd_ortho]])
-	else:
-		covar = np.array([[variance_cmd_ortho, 0], [0, variance_cmd_parallel]])
-
 	x, y = np.mgrid[0:world.xdim:.1, 0:world.ydim:.1]
 
 	# Calculate mean
-	est_pos = estimate_pos(cmd)
-	mean_vals = multivariate_normal(est_pos, covar).pdf(np.dstack((x, y)))
+	naive_dist = naive_algorithm(cmd, world)
+	mean_vals = naive_dist.pdf(np.dstack((x, y)))
 
 	# Find Distance to closest object
 	ref_dists = {ref : np.sqrt((x - ref.center[0])**2 + (y - ref.center[1])**2) for ref in world.references}
 	min_dists = np.min(np.dstack(ref_dists[ref] for ref in ref_dists), axis=2)
-	
 
 	# Difference between distance to closest object and object reference in command
 	distance_diff = ref_dists[cmd.reference] - min_dists
 
-	exp_vals = expon.pdf(distance_diff, scale=2)
+	exp_vals = expon.pdf(distance_diff, scale=0.7)
 
 	vals = mean_vals*exp_vals
 	vals = vals
 	loc = np.where(vals == vals.max())
 	mean = 0.1*np.array([loc[0][0], loc[1][0]])
-	#plt.contourf(x, y, vals)
-	#plt.show()
 
-	
-
-	mv_dist = multivariate_normal(mean, covar)
+	mv_dist = multivariate_normal(mean, naive_dist.cov)
 
 	return mv_dist
 
-def test(cmd, world):
-	m1 = naive_algorithm(cmd, world).mean
-	m2 = naive_algorithm2(cmd, world).mean
-	print m1
-	print m2
+def get_cheating_prob(data):
+	cheat_prob = []
+	for point_set in range(1, 13):
+		cheat_dist = cheating_algorithm(data[point_set])
 
-def test_algorithms(data, commands, world, plotrandom=False):
+		cheat_prob.append(np.sum(np.log(cheat_dist.pdf(data[point_set]))))
+
+	cheat_prob = np.array(cheat_prob)
+	return cheat_prob
+
+
+def test_naive2(data, commands, world, cheat_prob):
+	naive2_prob = []
+	for point_set in range(1, 13):
+		naive2_dist = naive_algorithm2(commands[point_set], world)
+
+		naive2_prob.append(np.sum(np.log(naive2_dist.pdf(data[point_set]))))
+
+	naive2_prob = np.array(naive2_prob)
+
+	diffs = cheat_prob - naive2_prob
+	L1 = np.sum(diffs)
+	L2 = np.linalg.norm(diffs)
+	return L1, L2
+
+def test_all_algorithms(data, commands, world, plotrandom=False):
 	random_prob = []
 	naive_prob = []
 	naive2_prob = []
@@ -181,6 +188,11 @@ def test_algorithms(data, commands, world, plotrandom=False):
 		if not plotrandom and prob == "random":
 			continue
 		plt.plot(np.arange(1, 13), probs[prob], label=prob)
+		ax = plt.gca()
+		ax.set_xlim([1, 12])
+		ax.set_xlabel('Command Number')
+		ax.set_ylabel('log probability of product of data')
+		plt.legend()
 	plt.show()
 	return probs
 
