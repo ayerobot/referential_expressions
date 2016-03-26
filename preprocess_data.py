@@ -17,7 +17,7 @@ num_trials = 12
 def string_to_vec(s):
 	return np.matrix([int(elem.strip()) for elem in s.split(",")]).T
 
-def preprocess_data(filename):
+def preprocess_data_csv(filename):
 	with open(filename) as csvfile:
 		csvreader = csv.reader(csvfile)
 
