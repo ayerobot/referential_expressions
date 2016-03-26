@@ -141,6 +141,10 @@ def naive_algorithm2(cmd, world):
 
 	return mv_dist
 
+"""
+Cheating algorithm is a bit of a special case since it doesn't take in command, world. 
+Therefore this is a special method just to calculate it.
+"""
 def get_cheating_prob(data):
 	cheat_prob = []
 	for point_set in range(1, 13):
@@ -151,61 +155,55 @@ def get_cheating_prob(data):
 	cheat_prob = np.array(cheat_prob)
 	return cheat_prob
 
+"""
+For each command, get log-probability of product of all data points
 
-def test_naive2(data, commands, world, cheat_prob):
-	naive2_prob = []
-	for point_set in range(1, 13):
-		naive2_dist = naive_algorithm2(commands[point_set], world)
+algorithms is a dictionary of the form {<algorithm name> : <function>}
+	e.g. {"naive" : naive_algorithm, "naive2" : naive_algorithm2}
 
-		naive2_prob.append(np.sum(np.log(naive2_dist.pdf(data[point_set]))))
+Assumes that all algorithms (except cheating) take in only two arguments, command and world
+"""
+def test_algorithms(data, commands, world, algorithms, plot=True):
+	# Cheating algorithm is special case
+	probs = {"cheating" : get_cheating_prob(data)}
+	for alg_name in algorithms:
+		alg_probs = []
+		for point_set in range(1, 13):
+			# Calculate pdf
+			dist = algorithms[alg_name](commands[point_set], world)
 
-	naive2_prob = np.array(naive2_prob)
+			# Sum of log prob = log of product prob
+			log_prob = np.log(dist.pdf(data[point_set]))
+			alg_probs.append(np.sum(log_prob))
+		probs[alg_name] = np.array(alg_probs)
 
-	diffs = cheat_prob - naive2_prob
-	L1 = np.sum(diffs)
-	L2 = np.linalg.norm(diffs)
-	return L1, L2
-
-def test_all_algorithms(data, commands, world, plotrandom=False):
-	random_prob = []
-	naive_prob = []
-	naive2_prob = []
-	cheating_prob = []
-	eval_dist = lambda pointset, distribution: np.sum(np.log(distribution.pdf(data[pointset])))
-	for point_set in range(1, 13):
-		rand_dist = random_algorithm(commands[point_set], world)
-		naive_dist = naive_algorithm(commands[point_set], world)
-		naive2_dist = naive_algorithm2(commands[point_set], world)
-		cheating_dist = cheating_algorithm(data[point_set])
-
-		random_prob.append(eval_dist(point_set, rand_dist))
-		naive_prob.append(eval_dist(point_set, naive_dist))
-		naive2_prob.append(eval_dist(point_set, naive2_dist))
-		cheating_prob.append(eval_dist(point_set, cheating_dist))
-
-	probs = {"random" : np.array(random_prob), "naive" : np.array(naive_prob), "naive2" : np.array(naive2_prob), "cheating" : np.array(cheating_prob)}
-	for prob in probs:
-		if not plotrandom and prob == "random":
-			continue
-		plt.plot(np.arange(1, 13), probs[prob], label=prob)
+	if plot:
+		for alg in probs:
+			plt.plot(np.arange(1, 13), probs[alg], label=alg)
 		ax = plt.gca()
-		ax.set_xlim([1, 12])
+		ax.set_xlim([1, len(commands)])
 		ax.set_xlabel('Command Number')
-		ax.set_ylabel('log probability of product of data')
+		ax.set_ylabel('log prob of product of data')
 		plt.legend()
-	plt.show()
-	return probs
+		plt.show()
+	else:
+		return probs
 
+"""
+Takes in result of test_algorithms. Calculates difference between each distribution and
+the cheating distribution. 
+"""
 def eval_algorithms(algorithm_probs):
-	random_diff = algorithm_probs['cheating'] - algorithm_probs['random']
-	naive_diff = algorithm_probs['cheating'] - algorithm_probs['naive']
-	naive2_diff = algorithm_probs['cheating'] - algorithm_probs['naive2']
-	vecs = [random_diff, naive_diff, naive2_diff]
-	L1 = [np.sum(vec) for vec in vecs]
-	L2 = [np.linalg.norm(vec) for vec in vecs]
+	diffs = {}
+	for alg_name in algorithm_probs:
+		if alg_name == 'cheating':
+			continue
+		diffs[alg_name] = algorithm_probs['cheating'] - algorithm_probs[alg_name]
+	L1 = {alg_name : np.sum(diffs[alg_name]) for alg_name in diffs}
+	L2 = {alg_name : np.linalg.norm(diffs[alg_name]) for alg_name in diffs}
 	print "L1 Norms: ", L1
 	print "L2 Norms: ", L2
-	return (random_diff, naive_diff, naive2_diff)
+	return diffs
 
 
 
