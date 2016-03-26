@@ -4,38 +4,17 @@ import sys
 
 import numpy as np
 import matplotlib
-from matplotlib.patches import Circle, Polygon
 from matplotlib.collections import PatchCollection
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from scipy.stats import multivariate_normal
-from reference_algorithms import Command, Reference, World
-from reference_algorithms import cheating_algorithm, random_algorithm, naive_algorithm, naive_algorithm2
+
+from world import *
+from reference_algorithms import cheating_algorithm, random_algorithm, naive_algorithm, naive_algorithm2, objects_walls_algorithm
 
 
 
-# Object dimensions and commands from https://docs.google.com/document/d/1TbAKCrdEfgD6nCEjhlpJ4BpAJcmeSajsGQwb4HBsh7U/edit
-#TODO: relationship between "the" and object name
-keyboard = Reference("the keyboard", np.array([[33.375, 13.5], [38.5, 13.5], [38, 24.625], [33, 24.375]]))
-car = Reference("the car", np.array([[9.5, 21.5], [10.625, 21.25], [11.625, 24], [10.375, 24.5]]))
-bowl = Reference("the pink bowl", (np.array([19.75, 10]), 2.5))
 
-world = World([keyboard, car, bowl], 48, 36)
-
-commands = {
-	1 : Command("4 inches left of the car", world),
-	2 : Command("1 foot left of the keyboard", world),
-	3 : Command("1 and a half feet right of the car",world),
-	4 : Command("4 inches in front of the pink bowl", world),
-	5 : Command("5 and a half inches behind the keyboard", world),
-	6 : Command("2 inches left of the pink bowl", world),
-	7 : Command("1 and a half inches behind the car", world),
-	8 : Command("7 inches right of the pink bowl", world ),
-	9 : Command("16 inches in front of the car", world),
-	10 : Command("2 feet behind the pink bowl",world),
-	11 : Command("3 inches right of the keyboard",world),
-	12 : Command("4 and a half inches in front of the keyboard",world)
-}
 
 """
 Get the data by doing:
@@ -68,23 +47,6 @@ def get_means(data):
 
 def get_covariances(data):
 	return {pt : np.cov(data[pt].T) for pt in data}
-
-"""
-Get cheating normal distributions
-
-Can use cheating_normals to get probability of data - 
-	e.g. probs1 = cheating_normals[1].pdf(data[1])
-"""
-def get_cheating_distribution(data):
-	means = get_means(data)
-	covariances = get_covariances(data)
-	cheating_normals = {pt : multivariate_normal(means[pt], covariances[pt]) for pt in data}
-	return cheating_normals
-
-def get_random_distribution(data):
-	means = {pt : np.random.rand(2)*np.array(48, 36) for pt in data}
-	random_normals = {pt : multivariate_normal(means[pt], np.array([1, 0], [0, 1])) for pt in data}
-	return random_normals
 
 def plot_distance_parallel(data, filename=None):
 	fig, ax = plt.subplots()
@@ -158,7 +120,7 @@ def visualize_distribution(points, distribution, world, filename=None, block=Tru
 	pos[:, :, 1] = y
 	plt.contourf(x, y, distribution.pdf(pos))
 
-	objects = PatchCollection([ref.patch for ref in world.references], cmap=matplotlib.cm.gray, alpha=1)
+	objects = PatchCollection([ref.patch for ref in world.references], cmap=cm.gray, alpha=1)
 	objects.set_array(np.array([1, 1, 1]))
 	ax.add_collection(objects)
 
@@ -175,7 +137,7 @@ def visualize_all_distributions(data, commands, algorithm, world, filename=None)
 	fig = plt.figure(figsize=(18, 8))
 	fig.subplots_adjust(hspace=0.5)
 	distributions = None
-	algorithms = {"random" : random_algorithm, "naive" : naive_algorithm, "naive2" : naive_algorithm2}
+	algorithms = {"random" : random_algorithm, "naive" : naive_algorithm, "naive2" : naive_algorithm2, "walls" : objects_walls_algorithm}
 	if algorithm == "cheating":
 		distributions = {pts : cheating_algorithm(data[pts]) for pts in data}
 	elif algorithm in algorithms:
