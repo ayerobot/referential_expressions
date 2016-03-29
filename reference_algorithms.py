@@ -11,6 +11,19 @@ variance_offset = -0.6
 #TODO: create generalized "result object"
 #all results from algorithm functions will return a function that has a .pdf method
 
+def estimate_reference_pt(ref, direction):
+	vals = ref.position*direction
+	coordinate = np.abs(np.max(vals[vals != 0]))
+	pos = np.zeros(2)
+	if direction[0]:
+		pos[0] = coordinate
+		pos[1] = ref.center[1]
+	else:
+		pos[0] = ref.center[0]
+		pos[1] = coordinate
+	return pos
+
+
 #estimates the "exact" position that a command is referring to 
 def estimate_pos(cmd):
 	ref = cmd.reference
@@ -19,6 +32,12 @@ def estimate_pos(cmd):
 	vector = cmd.distance*direction
 	offset = ref.width/2.*direction if direction[0] else ref.height/2.*direction
 	return center + offset + vector
+
+def estimate_pos2(cmd):
+	ref = cmd.reference
+	direction = cmd.direction
+	vector = cmd.distance*direction
+	return estimate_reference_pt(ref, direction) + vector
 
 # takes in training data set for a given command and returns a numpy.multivariate_norm distribution
 # with the sample mean and covariance
@@ -62,7 +81,7 @@ def naive_algorithm(cmd, world):
 
 # Estimate new mean position
 # Find argmax_{x, y} naive_algorithm(cmd, world)*1/scale*e^{||(x, y) - (x_ref, y_ref)|| - min_{obj}||(x, y) - (x_obj, y_obj)||/scale}
-def naive_algorithm2(cmd, world):
+def objects_algorithm(cmd, world):
 	x, y = np.mgrid[0:world.xdim:.1, 0:world.ydim:.1]
 
 	# Calculate naive distribution
@@ -117,85 +136,6 @@ def objects_walls_algorithm(cmd, world, k1=2.7, k2=1.2):
 	mv_dist = multivariate_normal(mean, naive_dist.cov)
 
 	return mv_dist
-
-"""
-Cheating algorithm is a bit of a special case since it doesn't take in command, world. 
-Therefore this is a special method just to calculate it.
-"""
-def get_cheating_prob(data):
-	cheat_prob = []
-	for point_set in range(1, 13):
-		cheat_dist = cheating_algorithm(data[point_set])
-
-		cheat_prob.append(np.sum(np.log(cheat_dist.pdf(data[point_set]))))
-
-	cheat_prob = np.array(cheat_prob)
-	return cheat_prob
-
-"""
-For each command, get log-probability of product of all data points
-
-algorithms is a dictionary of the form {<algorithm name> : <function>}
-	e.g. {"naive" : naive_algorithm, "naive2" : naive_algorithm2}
-
-Assumes that all algorithms (except cheating) take in only two arguments, command and world
-"""
-def test_algorithms(data, commands, world, algorithms, plot=True):
-	# Cheating algorithm is special case
-	probs = {"cheating" : get_cheating_prob(data)}
-	for alg_name in algorithms:
-		alg_probs = []
-		for point_set in range(1, 13):
-			# Calculate pdf
-			dist = algorithms[alg_name](commands[point_set], world)
-
-			# Sum of log prob = log of product prob
-			log_prob = np.log(dist.pdf(data[point_set]))
-			alg_probs.append(np.sum(log_prob))
-		probs[alg_name] = np.array(alg_probs)
-
-	if plot:
-		for alg in probs:
-			plt.plot(np.arange(1, 13), probs[alg], label=alg)
-		ax = plt.gca()
-		ax.set_xlim([1, len(commands)])
-		ax.set_xlabel('Command Number')
-		ax.set_ylabel('log prob of product of data')
-		plt.legend()
-		plt.show()
-	else:
-		return probs
-
-"""
-Takes in result of test_algorithms. Calculates difference between each distribution and
-the cheating distribution. 
-"""
-def eval_algorithms(algorithm_probs):
-	diffs = {}
-	for alg_name in algorithm_probs:
-		if alg_name == 'cheating':
-			continue
-		diffs[alg_name] = algorithm_probs['cheating'] - algorithm_probs[alg_name]
-	L1 = {alg_name : np.sum(diffs[alg_name]) for alg_name in diffs}
-	L2 = {alg_name : np.linalg.norm(diffs[alg_name]) for alg_name in diffs}
-	print "L1 Norms: ", L1
-	print "L2 Norms: ", L2
-	return diffs
-
-def gridsearch(data, commands, world):
-	k1 = np.arange(2.6, 2.8, 0.01)
-	k2 = np.arange(0.5, 2, 0.1)
-	L2 = np.zeros((len(k1), len(k2)))
-	cheating_prob = get_cheating_prob(data)
-	for i, val1 in enumerate(k1):
-		for j, val2 in enumerate(k2):
-			print float(len(k2)*i + j)/L2.size*100, "%"
-			probs = np.array([np.sum(np.log(objects_walls_algorithm(commands[num], world, val1, val2).pdf(data[num]))) for num in range(1, 13)])
-			L2[i, j] = np.linalg.norm(cheating_prob - probs)
-	print "100.0 %"
-	return L2
-
-
 
 
 

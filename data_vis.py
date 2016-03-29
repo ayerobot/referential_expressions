@@ -1,5 +1,4 @@
 #!/usr/bin/env python2
-
 import sys
 
 import numpy as np
@@ -9,11 +8,8 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from scipy.stats import multivariate_normal
 
-from world import *
-from reference_algorithms import cheating_algorithm, random_algorithm, naive_algorithm, naive_algorithm2, objects_walls_algorithm
-
-
-
+from world_objects import *
+from reference_algorithms import *
 
 
 """
@@ -80,15 +76,6 @@ def plot_distance_orthogonal(data):
 	ax.set_ylabel('Variance orthogonal to direction of command')
 	plt.show()
 
-# i = command number
-def estimated_position(i):
-	ref = commands[i].reference
-	center = ref.center
-	direction = commands[i].direction
-	vector = commands[i].distance*direction
-	offset = ref.width/2.*direction if direction[0] else ref.height/2.*direction
-	return center + offset + vector
-
 def visualize(data, world, filename=None):
 	fig, ax = plt.subplots()
 	ax.set_xlim([0, world.xdim]) # Set x dim to 4 feet
@@ -101,7 +88,7 @@ def visualize(data, world, filename=None):
 	colors = cm.rainbow(np.linspace(0, 1, 12))
 	for i in range(1, 13):
 		plt.scatter(data[i][:,0], data[i][:,1], c=colors[i-1], marker='+')
-		estimated_pos = estimated_position(i)
+		estimated_pos = estimate_pos(commands[i])
 		plt.scatter(estimated_pos[0], estimated_pos[1], c=np.array([0, 0, 0, 1]), marker='o')
 
 	if filename:
@@ -137,7 +124,7 @@ def visualize_all_distributions(data, commands, algorithm, world, filename=None)
 	fig = plt.figure(figsize=(18, 8))
 	fig.subplots_adjust(hspace=0.5)
 	distributions = None
-	algorithms = {"random" : random_algorithm, "naive" : naive_algorithm, "naive2" : naive_algorithm2, "walls" : objects_walls_algorithm}
+	algorithms = {"random" : random_algorithm, "naive" : naive_algorithm, "objects" : objects_algorithm, "objects_walls" : objects_walls_algorithm}
 	if algorithm == "cheating":
 		distributions = {pts : cheating_algorithm(data[pts]) for pts in data}
 	elif algorithm in algorithms:
