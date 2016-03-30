@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 import sys
 
 import numpy as np
@@ -10,7 +10,7 @@ from scipy.stats import multivariate_normal
 
 from world_objects import *
 from reference_algorithms import *
-from algorithm_evaluation import algs_to_test
+from algorithm_evaluation import load_data, algs_to_test
 
 
 """
@@ -21,23 +21,6 @@ Get the data by doing:
 
 then data is a dictionary with keys 1-12, referring to the points
 """
-def load_data(filename):
-	text = None
-	with open(filename) as f:
-		text = f.readline()
-
-	text = text.split('\r')
-	data = {}
-	for line in text:
-		line = line.split(',', 1)
-		point_num = int(line[0])
-		point_loc = [float(el) for el in line[1][2:-2].split(',')] # Parsing the tuple is annoying
-		data[point_num] = data.get(point_num, []) + [point_loc]
-
-	for i in range(1, 13):
-		data[i] = np.array(data[i])
-
-	return data
 
 def get_means(data):
 	return {pt : np.mean(data[pt], axis=0) for pt in data}

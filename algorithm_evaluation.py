@@ -1,9 +1,9 @@
+#!/usr/bin/env python
 import sys
 
 import numpy as np
 import matplotlib.pyplot as plt
 
-from data_vis import load_data, get_covariances
 from reference_algorithms import *
 from world_objects import *
 
@@ -11,6 +11,24 @@ algs_to_test = {'naive' : naive_algorithm,
 				'objects' : objects_algorithm, 
 				'objects_walls' : objects_walls_algorithm,
 				'refpt' : ow_refpt_algorithm}
+
+def load_data(filename):
+	text = None
+	with open(filename) as f:
+		text = f.readline()
+
+	text = text.split('\r')
+	data = {}
+	for line in text:
+		line = line.split(',', 1)
+		point_num = int(line[0])
+		point_loc = [float(el) for el in line[1][2:-2].split(',')] # Parsing the tuple is annoying
+		data[point_num] = data.get(point_num, []) + [point_loc]
+
+	for i in range(1, 13):
+		data[i] = np.array(data[i])
+
+	return data
 
 """
 Cheating algorithm is a bit of a special case since it doesn't take in command, world. 
@@ -132,7 +150,7 @@ def eval_means(means, data=None, commands=None):
 # I wonder if discrepency in command 7 is because of duct tape?
 # Looks like there was significant overestimation in that case
 if __name__ == '__main__':
-	data = load_data('point_data.csv')
+	data = load_data('data/point_data.csv')
 	if len(sys.argv) > 1 and sys.argv[1] == 'means':
 		distributions = get_all_distributions(data, commands, world)
 		means = get_means(distributions)
