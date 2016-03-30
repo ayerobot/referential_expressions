@@ -12,28 +12,12 @@ variance_offset = -0.6
 #all results from algorithm functions will return a function that has a .pdf method
 
 def estimate_reference_pt(ref, direction):
-	vals = ref.position*direction
-	coordinate = np.abs(np.max(vals[vals != 0]))
-	pos = np.zeros(2)
-	if direction[0]:
-		pos[0] = coordinate
-		pos[1] = ref.center[1]
-	else:
-		pos[0] = ref.center[0]
-		pos[1] = coordinate
-	return pos
-
+	center = ref.center
+	offset = ref.width/2.*direction if direction[0] else ref.height/2.*direction
+	return center + offset
 
 #estimates the "exact" position that a command is referring to 
 def estimate_pos(cmd):
-	ref = cmd.reference
-	center = ref.center
-	direction = cmd.direction
-	vector = cmd.distance*direction
-	offset = ref.width/2.*direction if direction[0] else ref.height/2.*direction
-	return center + offset + vector
-
-def estimate_pos2(cmd):
 	ref = cmd.reference
 	direction = cmd.direction
 	vector = cmd.distance*direction
@@ -105,7 +89,7 @@ def objects_algorithm(cmd, world):
 
 	return mv_dist
 
-def objects_walls_algorithm(cmd, world, k1=2.7, k2=1.2):
+def objects_walls_algorithm(cmd, world, k1=4.2, k2=4.4):
 	x, y = np.mgrid[0:world.xdim:.1, 0:world.ydim:.1]
 
 	# Calculate naive distribution
@@ -125,8 +109,51 @@ def objects_walls_algorithm(cmd, world, k1=2.7, k2=1.2):
 	min_wall_dists = np.min(np.dstack((x, y, world.xdim - x, world.ydim - y)), axis=2)
 
 	# Difference between distance to closest wall and object reference in command
-	wall_distance_diff = np.max(ref_dists[cmd.reference] - min_wall_dists, 0)
+	wall_distance_diff = ref_dists[cmd.reference] - min_wall_dists
+	wall_distance_diff[wall_distance_diff < 0] = 0
 
+	wall_distance_vals = expon.pdf(wall_distance_diff, scale=k2)
+
+	mean_prob = naive_vals*ref_distance_vals*wall_distance_vals
+	loc = np.where(mean_prob == mean_prob.max())
+	mean = 0.1*np.array([loc[0][0], loc[1][0]])
+
+	mv_dist = multivariate_normal(mean, naive_dist.cov)
+
+	return mv_dist
+
+# Uses distance to closest reference pt on object, rather than dist to center
+# Significant slowdown
+def ow_refpt_algorithm(cmd, world, k1=4.8, k2=3.9):
+	x, y = np.mgrid[0:world.xdim:.1, 0:world.ydim:.1]
+
+	# Calculate naive distribution
+	naive_dist = naive_algorithm(cmd, world)
+	naive_vals = naive_dist.pdf(np.dstack((x, y)))
+
+	# Find Distance to closest object
+	ref_dists = {}
+	for ref in world.references:
+		directions = np.array([[1, 0], [-1, 0], [0, 1], [0, -1]])
+		ref_pts = np.array([estimate_reference_pt(ref, direction) for direction in directions])
+		possible_dists = np.dstack(np.sqrt((x - pt[0])**2 + (y - pt[1])**2) for pt in ref_pts)
+		ref_dists[ref] = np.min(possible_dists, axis=2)
+	#ref_dists = {ref : np.sqrt((x - ref.center[0])**2 + (y - ref.center[1])**2) for ref in world.references}
+	min_ref_dists = np.min(np.dstack(ref_dists[ref] for ref in ref_dists), axis=2)
+
+	# Difference between distance to closest object and object reference in command
+	ref_distance_diff = ref_dists[cmd.reference] - min_ref_dists
+
+	ref_distance_vals = expon.pdf(ref_distance_diff, scale=k1)
+
+	# Find distance to nearest wall
+	min_wall_dists = np.min(np.dstack((x, y, world.xdim - x, world.ydim - y)), axis=2)
+
+	# Difference between distance to closest wall and object reference in command
+	wall_distance_diff = ref_dists[cmd.reference] - min_wall_dists
+	wall_distance_diff[wall_distance_diff < 0] = 0
+	#plt.contourf(x, y, wall_distance_diff)
+	#plt.show()
 	wall_distance_vals = expon.pdf(wall_distance_diff, scale=k2)
 
 	mean_prob = naive_vals*ref_distance_vals*wall_distance_vals

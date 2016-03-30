@@ -10,6 +10,7 @@ from scipy.stats import multivariate_normal
 
 from world_objects import *
 from reference_algorithms import *
+from algorithm_evaluation import algs_to_test
 
 
 """
@@ -124,11 +125,10 @@ def visualize_all_distributions(data, commands, algorithm, world, filename=None)
 	fig = plt.figure(figsize=(18, 8))
 	fig.subplots_adjust(hspace=0.5)
 	distributions = None
-	algorithms = {"random" : random_algorithm, "naive" : naive_algorithm, "objects" : objects_algorithm, "objects_walls" : objects_walls_algorithm}
 	if algorithm == "cheating":
 		distributions = {pts : cheating_algorithm(data[pts]) for pts in data}
-	elif algorithm in algorithms:
-		distributions = {cmdnum : algorithms[algorithm](commands[cmdnum], world) for cmdnum in commands}
+	elif algorithm in algs_to_test:
+		distributions = {cmdnum : algs_to_test[algorithm](commands[cmdnum], world) for cmdnum in commands}
 	else:
 		raise ValueError("Unknwon Algorithm: " + str(algorithm))
 

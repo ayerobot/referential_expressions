@@ -3,11 +3,14 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-from data_vis import load_data
+from data_vis import load_data, get_covariances
 from reference_algorithms import *
 from world_objects import *
 
-algs_to_test = {'naive' : naive_algorithm, 'objects' : objects_algorithm, 'objects_walls' : objects_walls_algorithm}
+algs_to_test = {'naive' : naive_algorithm, 
+				'objects' : objects_algorithm, 
+				'objects_walls' : objects_walls_algorithm,
+				'refpt' : ow_refpt_algorithm}
 
 """
 Cheating algorithm is a bit of a special case since it doesn't take in command, world. 
@@ -74,16 +77,23 @@ def eval_algorithms(algorithm_probs):
 	return diffs
 
 def gridsearch(data, commands, world):
-	k1 = np.arange(2.6, 2.8, 0.01)
-	k2 = np.arange(0.5, 2, 0.1)
+	k1 = np.arange(4.1, 5, .1)
+	k2 = np.arange(3.5, 4.2, .1)
+	print k2
 	L2 = np.zeros((len(k1), len(k2)))
 	cheating_prob = get_cheating_prob(data)
 	for i, val1 in enumerate(k1):
 		for j, val2 in enumerate(k2):
 			print float(len(k2)*i + j)/L2.size*100, "%"
-			probs = np.array([np.sum(np.log(objects_walls_algorithm(commands[num], world, val1, val2).pdf(data[num]))) for num in range(1, 13)])
+			probs = np.array([np.sum(np.log(ow_refpt_algorithm(commands[num], world, val1, val2).pdf(data[num]))) for num in range(1, 13)])
 			L2[i, j] = np.linalg.norm(cheating_prob - probs)
 	print "100.0 %"
+	loc = np.where(L2 == L2.min())
+	print
+	print 'k1 =', k1[loc[0][0]]
+	print 'k2 =', k2[loc[1][0]]
+	plt.contourf(k2, k1, L2)
+	plt.show()
 	return L2
 
 def get_all_distributions(data, commands, world):
@@ -97,7 +107,7 @@ def get_all_distributions(data, commands, world):
 def get_means(distributions):
 	return {name : np.array([distributions[name][i].mean for i in range(1, 13)]) for name in distributions}
 
-def eval_means(means):
+def eval_means(means, data=None, commands=None):
 	L2 = {}
 	for name in means:
 		if name == 'cheating':
@@ -105,22 +115,28 @@ def eval_means(means):
 		L2[name] = np.sqrt(np.sum((means['cheating'] - means[name])**2, axis=1))
 	for name in L2:
 		plt.plot(np.arange(1, 13), L2[name], label=name)
+	if data and commands:
+		covs = get_covariances(data)
+		var_parallel = [covs[i][0, 0] if commands[i].direction[0] else covs[i][1, 1] for i in range(1, 13)]
+		stds = [np.sqrt(var) for var in var_parallel]
+		plt.plot(np.arange(1, 13), stds, 'k--', label='Empirical STD')
 	ax = plt.gca()
 	ax.set_xlim([1, 12])
 	ax.set_xlabel('Command Number')
-	ax.set_ylabel('Distance between estimated and empirical means')
+	ax.set_ylabel('Distance (in)')
 	plt.legend()
+	plt.title('Distance between estimated and empirical means')
 	plt.show()
 	return L2
 
 # I wonder if discrepency in command 7 is because of duct tape?
-# Maybe people didn't realize that that was a thing
+# Looks like there was significant overestimation in that case
 if __name__ == '__main__':
 	data = load_data('point_data.csv')
 	if len(sys.argv) > 1 and sys.argv[1] == 'means':
 		distributions = get_all_distributions(data, commands, world)
 		means = get_means(distributions)
-		L2 = eval_means(means)
+		L2 = eval_means(means, data, commands)
 	else:
 		test_algorithms(data, commands, world, algs_to_test)
 
