@@ -56,11 +56,11 @@ def preprocess_data_csv(filename):
 					results[setup_num][i - 3] = results[setup_num].get(i - 3, []) + [np.array(point_new_basis)] #casting back into array
 
 	#save as pickle
-	with open("outfile.dat", "wb") as outfile:
+	with open("data/outfile.dat", "wb") as outfile:
 		pickle.dump(results, outfile, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 
 if __name__ == "__main__":
-	filename = "exp_2_test.csv"
+	filename = "data/exp_2_test.csv"
 	preprocess_data(filename)

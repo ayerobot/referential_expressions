@@ -143,7 +143,7 @@ def visualize_all_distributions(data, commands, algorithm, world, filename=None)
 	plt.show()
 
 if __name__ == '__main__':
-	data = load_data('point_data.csv')
+	data = load_data('data/point_data.csv')
 	if len(sys.argv) == 3 and sys.argv[1] == 'save':
 		visualize(data, sys.argv[2])
 	else:
