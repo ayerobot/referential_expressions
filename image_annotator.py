@@ -44,7 +44,7 @@ def annotate_image(imgpath):
 	fig.canvas.mpl_connect('button_press_event', img_annotator.onclick)
 	plt.show()
 
-	return img_annotator.points
+	return img_annotator.points[0:15] #it counts the last click to the save button as a click
 
 
 if __name__ == "__main__":

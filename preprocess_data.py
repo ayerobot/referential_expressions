@@ -5,6 +5,7 @@
 import numpy as np
 import csv
 import pickle
+import sys
 
 x_len = 48 #inches
 y_len = 36 #inches
@@ -16,6 +17,33 @@ num_trials = 12
 #converts a tuple in text file format "x, y"
 def string_to_vec(s):
 	return np.matrix([int(elem.strip()) for elem in s.split(",")]).T
+
+#opening and preprocessing data from image annotator
+def preprocess_data_npy(filename): 
+	raw_data = np.load(filename)
+	results = {}
+	for trial in raw_data:
+		#defining reference points
+		bottom_left = np.matrix(trial[0])
+		bottom_right = np.matrix(trial[1])
+		top_left = np.matrix(trial[2])
+
+		#new basis vectors
+		b1 = bottom_right - bottom_left #x basis
+		b2 = top_left - bottom_left #y basis
+
+		basis_vecs = np.concatenate((b1, b2), axis=1)
+
+		for i in range(4, len(trial)): #for every elem #subtracting out origin
+			point = string_to_vec(trial[i]) - bottom_left
+			point_new_basis = np.multiply(np.linalg.inv(basis_vecs)*(point), np.matrix([x_len, y_len]).T)
+			results[i - 3] = results.get(i - 3, []) + [np.array(point_new_basis)] #casting back into array
+
+		#save as pickle
+	with open(filename[0:len(filename) - 4] + "_preprocessed.dat", "wb") as outfile:
+		pickle.dump(results, outfile, protocol=pickle.HIGHEST_PROTOCOL)
+
+
 
 def preprocess_data_csv(filename):
 	with open(filename) as csvfile:
@@ -62,5 +90,7 @@ def preprocess_data_csv(filename):
 
 
 if __name__ == "__main__":
-	filename = "exp_2_test.csv"
-	preprocess_data(filename)
+	if len(sys.argv) < 2:
+		print "preprocess_data.py npyfile"
+	else:
+		preprocess_data_npy(sys.argv[1])
