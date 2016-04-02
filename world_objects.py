@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib.patches import Circle, Polygon
 
-from parser import parse
+from nl_parser import parse
 
 #map natural language direction to direction tuples:
 lang_to_tup = {"right of":np.array([1, 0]), "left of":np.array([-1, 0]), "to the left of":np.array([-1, 0]), "to the right of":np.array([1, 0]), "in front of":np.array([0, -1]), "behind":np.array([0, 1])}
@@ -51,6 +51,8 @@ class World:
 	#future: instance methods for editing reference list, including type-checking
 	#def add_reference(self, ref)
 
+#SCENE 1 
+
 # Object dimensions and commands from https://docs.google.com/document/d/1TbAKCrdEfgD6nCEjhlpJ4BpAJcmeSajsGQwb4HBsh7U/edit
 #TODO: relationship between "the" and object name
 keyboard = Reference("the keyboard", np.array([[33.375, 13.5], [38.5, 13.5], [38, 24.625], [33, 24.375]]))
@@ -73,4 +75,6 @@ commands = {
 	11 : Command("3 inches right of the keyboard",world),
 	12 : Command("4 and a half inches in front of the keyboard",world)
 }
+
+#SCENE 2
 

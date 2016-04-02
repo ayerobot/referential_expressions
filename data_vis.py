@@ -7,6 +7,7 @@ from matplotlib.collections import PatchCollection
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from scipy.stats import multivariate_normal
+import pickle
 
 from world_objects import *
 from reference_algorithms import *
@@ -126,7 +127,12 @@ def visualize_all_distributions(data, commands, algorithm, world, filename=None)
 	plt.show()
 
 if __name__ == '__main__':
-	data = load_data('data/point_data.csv')
+	#data = load_data('data/point_data.csv')
+	datafile = 'scene_1_images_annotated_preprocessed.dat'
+	with open(datafile) as dat:
+		data = pickle.load(dat)
+		print data
+
 	if len(sys.argv) == 3 and sys.argv[1] == 'save':
 		visualize(data, sys.argv[2])
 	else:

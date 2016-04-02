@@ -51,7 +51,7 @@ def parse_number(words, command):
 			print (words[i] + " is not a valid number.")
 			return None, 0
 
-	print (command[l:])
+	#print (command[l:])
 	fraction = re.match(fractionsRegEx, command[l:])
 	if (fraction != None):
 		F = fraction.group(0)

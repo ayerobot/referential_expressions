@@ -24,7 +24,7 @@ def preprocess_data_npy(filename):
 	results = {}
 	for trial in raw_data:
 		#defining reference points
-		bottom_left = np.matrix(trial[0])
+		bottom_left = np.matrix(trial[0]) #will be size (1, 2), need to transpose later
 		bottom_right = np.matrix(trial[1])
 		top_left = np.matrix(trial[2])
 
@@ -32,19 +32,24 @@ def preprocess_data_npy(filename):
 		b1 = bottom_right - bottom_left #x basis
 		b2 = top_left - bottom_left #y basis
 
-		basis_vecs = np.concatenate((b1, b2), axis=1)
+		basis_vecs = np.concatenate((b1.T, b2.T), axis=1)
 
-		for i in range(4, len(trial)): #for every elem #subtracting out origin
-			point = string_to_vec(trial[i]) - bottom_left
-			point_new_basis = np.multiply(np.linalg.inv(basis_vecs)*(point), np.matrix([x_len, y_len]).T)
-			results[i - 3] = results.get(i - 3, []) + [np.array(point_new_basis)] #casting back into array
+		for i in range(3, len(trial)): #for every elem subtracting out origin
+			point = np.matrix(trial[i]) - bottom_left
+			point_new_basis = np.multiply(np.linalg.inv(basis_vecs)*(point.T), np.matrix([x_len, y_len]).T)
+			results[i - 2] = results.get(i - 2, []) + np.array((point_new_basis.T)).tolist()
+
+	for i in range(1, 13): #hardcoding this number in for now
+		results[i] = np.array(results[i])
+
+	print results
 
 		#save as pickle
 	with open(filename[0:len(filename) - 4] + "_preprocessed.dat", "wb") as outfile:
 		pickle.dump(results, outfile, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-
+#DEPRECIATED - the data should be loaded from a .npy file if you're using the auto-annotator
 def preprocess_data_csv(filename):
 	with open(filename) as csvfile:
 		csvreader = csv.reader(csvfile)
@@ -79,7 +84,7 @@ def preprocess_data_csv(filename):
 				for i in range(4, len(row)): #for every elem
 					point = string_to_vec(row[i]) - bottom_left
 					#point = point.reshape(len(point), 1) #performing transposition on 1d array
-					print np.linalg.inv(basis_vecs)*(point)
+					#print np.linalg.inv(basis_vecs)*(point)
 					point_new_basis = np.multiply(np.linalg.inv(basis_vecs)*(point), np.matrix([x_len, y_len]).T)
 					results[setup_num][i - 3] = results[setup_num].get(i - 3, []) + [np.array(point_new_basis)] #casting back into array
 
