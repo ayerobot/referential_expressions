@@ -135,7 +135,7 @@ def eval_means(means, data=None, commands=None):
 	for name in L2:
 		plt.plot(np.arange(1, 13), L2[name], label=name)
 	if data and commands:
-		covs = get_covariances(data)
+		covs = {pt : np.cov(data[pt].T) for pt in data}
 		var_parallel = [covs[i][0, 0] if commands[i].direction[0] else covs[i][1, 1] for i in range(1, 13)]
 		stds = [np.sqrt(var) for var in var_parallel]
 		plt.plot(np.arange(1, 13), stds, 'k--', label='Empirical STD')
