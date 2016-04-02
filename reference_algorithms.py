@@ -122,6 +122,7 @@ def objects_walls_algorithm(cmd, world, k1=4.2, k2=4.4):
 
 	return mv_dist
 
+# Objects + Walls, closest reference point algorithm
 # Uses distance to closest reference pt on object, rather than dist to center
 # Significant slowdown
 def ow_refpt_algorithm(cmd, world, k1=4.8, k2=3.9):

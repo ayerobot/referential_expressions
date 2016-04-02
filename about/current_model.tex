@@ -1,0 +1,50 @@
+\documentclass[12pt,letterpaper]{article}
+\usepackage{amsmath,amsthm,amsfonts,amssymb,amscd}
+\usepackage{fullpage}
+\usepackage{lastpage}
+\usepackage{enumerate}
+\usepackage{fancyhdr}
+\usepackage{mathrsfs}
+\usepackage{dsfont}
+\usepackage[margin=3cm]{geometry}
+\setlength{\parindent}{0.0in}
+\setlength{\parskip}{0.05in}
+
+\begin{document}
+\section*{Current Model:}
+
+\subsection{Naive Gaussian}
+\subsubsection*{Mean Estimation}
+For a given command and world, let $ref$ be the reference from the command, $dir$ be the direction of the command, from the set $\{left, right, in\;front, behind\}$, and $distance$ be the distance specified. Then
+\[
+\hat{x}, \hat{y} = \begin{cases} ref.center + \frac{ref.height}{2} + distance, & dir = behind \\
+ref.center - \frac{ref.height}{2} - distance, & dir = in\;front \\
+ ref.center + \frac{ref.width}{2} + distance, & dir = right \\
+ ref.center - \frac{ref.width}{2} - distance, & dir = left \end{cases}
+\]
+
+\subsubsection*{Covariance Estimation}
+Covariance in the direction of the command is estimated based on a linear fit of the distance of the command vs. the covariance of the data. Covariance in the orthogonal direction is fixed to an arbitrary constant.
+\[
+\hat{\Sigma} = \begin{cases}
+\begin{bmatrix} 0.5 & 0 \\ 0 & \max(0.43distance - 0.59, 0.5) \end{bmatrix}, & dir = behind, in\;front\\
+\begin{bmatrix} \max(0.43distance - 0.59, 0.5) & 0 \\ 0 & 0.5 \end{bmatrix}, & dir = left, right
+\end{cases}
+\]
+
+This outputs a multivariate normal pdf with parameters $\mu = (\hat{x}, \hat{y}), \Sigma = \hat{Sigma}$.
+
+\subsection{Object Distance Estimation}
+This is a distribution that penalizes estimated locations that are closer to a different object in the world than they are to the reference object. It takes the form of an exponential distribution. The parameter was found via grid search.
+
+\[
+p(x, y | command, world) = \frac{1}{2.7}e^{\frac{1}{2.7}(||(x, y) - (x_{ref}, y_{ref})|| - \min_{obj \in world} ||(x, y) - (x_{obj}, y_{obj})||)}
+\]
+\newpage
+\subsection{Wall Distance Estimation}
+This is a distribution that penalizes estimated locations that are closer to a wall than they are to the reference object. It takes the form of an exponential distribution. The parameter was found via grid search. Note: edges of tables count as walls.
+
+\[
+p(x, y | command, world) = \frac{1}{1.2}e^{\frac{1}{1.2}(||(x, y) - (x_{ref,} y_{ref})|| - \min_{walls} ||(x, y) - (x_{wall}, y_{wall})||}
+\]
+\end{document}
