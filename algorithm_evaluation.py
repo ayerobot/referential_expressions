@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 from reference_algorithms import *
 from world_objects import *
+import pickle
 
 algs_to_test = {'naive' : naive_algorithm, 
 				'objects' : objects_algorithm, 
@@ -149,8 +150,13 @@ def eval_means(means, data=None, commands=None):
 
 # I wonder if discrepency in command 7 is because of duct tape?
 # Looks like there was significant overestimation in that case
+# That's very possible, a lot of people in the second scene 1 trial expressed confusion about that - Eddie
 if __name__ == '__main__':
-	data = load_data('data/point_data.csv')
+	#data = load_data('data/point_data.csv')
+	datafile = 'scene_1_images_annotated_preprocessed.dat'
+	with open(datafile) as dat:
+		data = pickle.load(dat)
+		print data
 	if len(sys.argv) > 1 and sys.argv[1] == 'means':
 		distributions = get_all_distributions(data, commands, world)
 		means = get_means(distributions)
