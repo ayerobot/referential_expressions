@@ -152,15 +152,19 @@ def eval_means(means, data=None, commands=None):
 # Looks like there was significant overestimation in that case
 # That's very possible, a lot of people in the second scene 1 trial expressed confusion about that - Eddie
 if __name__ == '__main__':
-	#data = load_data('data/point_data.csv')
 	datafile = 'data/scene_1_images_annotated_preprocessed.dat'
+	cmnds = commands
+	wrld = world
+	if len(sys.argv) > 1 and sys.argv[1] == '2':
+		datafile = 'data/scene_2_images_annotated_preprocessed.dat'
+		cmnds = commands_2
+		wrld = world_2
 	with open(datafile) as dat:
 		data = pickle.load(dat)
-		print data
-	if len(sys.argv) > 1 and sys.argv[1] == 'means':
-		distributions = get_all_distributions(data, commands, world)
+	if sys.argv[-1] == 'means':
+		distributions = get_all_distributions(data, cmnds, wrld)
 		means = get_means(distributions)
-		L2 = eval_means(means, data, commands)
+		L2 = eval_means(means, data, cmnds)
 	else:
-		test_algorithms(data, commands, world, algs_to_test)
+		test_algorithms(data, cmnds, wrld, algs_to_test)
 
