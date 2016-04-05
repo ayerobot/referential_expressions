@@ -153,14 +153,14 @@ def eval_means(means, data=None, commands=None):
 # That's very possible, a lot of people in the second scene 1 trial expressed confusion about that - Eddie
 if __name__ == '__main__':
 	#data = load_data('data/point_data.csv')
-	datafile = 'scene_2_images_annotated_preprocessed.dat'
+	datafile = 'data/scene_1_images_annotated_preprocessed.dat'
 	with open(datafile) as dat:
 		data = pickle.load(dat)
 		print data
 	if len(sys.argv) > 1 and sys.argv[1] == 'means':
-		distributions = get_all_distributions(data, commands_2, world_2)
+		distributions = get_all_distributions(data, commands, world)
 		means = get_means(distributions)
-		L2 = eval_means(means, data, commands_2)
+		L2 = eval_means(means, data, commands)
 	else:
-		test_algorithms(data, commands_2, world_2, algs_to_test)
+		test_algorithms(data, commands, world, algs_to_test)
 

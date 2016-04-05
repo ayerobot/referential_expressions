@@ -128,7 +128,7 @@ def visualize_all_distributions(data, commands, algorithm, world, filename=None)
 
 if __name__ == '__main__':
 	#data = load_data('data/point_data.csv')
-	datafile = 'scene_2_images_annotated_preprocessed.dat'
+	datafile = 'data/scene_2_images_annotated_preprocessed.dat'
 	with open(datafile) as dat:
 		data = pickle.load(dat)
 		print data
