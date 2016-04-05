@@ -78,3 +78,24 @@ commands = {
 
 #SCENE 2
 
+keyboard_2 = Reference("the keyboard", np.array([[26.83068791, 19.04820551], [37.72432027, 18.35193125], [37.91045218, 23.30818498], [26.80185057, 23.8928784 ]]))
+car_2 = Reference("the car", np.array([[17.99056582, 10.03777581], [19.06912902, 9.70684443], [ 19.00192333, 7.08450112], [ 17.92537379, 7.0771387]]))
+bowl_2 = Reference("the pink bowl", (np.array([15.41, 25.58]), 2.5))
+
+world_2 = World([keyboard_2, car_2, bowl_2], 48, 36)
+
+commands_2 = {
+	1 : Command("2 inches left of the car", world_2),
+	2 : Command("1 and a quarter feet left of the keyboard", world_2),
+	3 : Command("6 inches in front of the pink bowl",world_2),
+	4 : Command("3 and a half inches behind the keyboard", world_2),
+	5 : Command("10 inches left of the pink bowl", world_2),
+	6 : Command("1 and a half feet behind the car", world_2),
+	7 : Command("1 inch right of the pink bowl", world_2),
+	8 : Command("1 foot right of the car", world_2),
+	9 : Command("4 inches in front of the car", world_2),
+	10 : Command("5 and a half inches behind the pink bowl",world_2),
+	11 : Command("7 inches right of the keyboard",world_2),
+	12 : Command("1 and a half inches in front of the keyboard",world_2)
+}
+

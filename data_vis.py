@@ -61,7 +61,7 @@ def plot_distance_orthogonal(data):
 	ax.set_ylabel('Variance orthogonal to direction of command')
 	plt.show()
 
-def visualize(data, world, filename=None):
+def visualize(data, world, commands, filename=None):
 	fig, ax = plt.subplots()
 	ax.set_xlim([0, world.xdim]) # Set x dim to 4 feet
 	ax.set_ylim([0, world.ydim]) # Set y dim to 3 feet
@@ -128,7 +128,7 @@ def visualize_all_distributions(data, commands, algorithm, world, filename=None)
 
 if __name__ == '__main__':
 	#data = load_data('data/point_data.csv')
-	datafile = 'scene_1_images_annotated_preprocessed.dat'
+	datafile = 'scene_2_images_annotated_preprocessed.dat'
 	with open(datafile) as dat:
 		data = pickle.load(dat)
 		print data
@@ -136,4 +136,4 @@ if __name__ == '__main__':
 	if len(sys.argv) == 3 and sys.argv[1] == 'save':
 		visualize(data, sys.argv[2])
 	else:
-		visualize(data, world)
+		visualize(data, world_2, commands_2)
