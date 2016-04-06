@@ -142,18 +142,27 @@ def eval_means(means, data=None, commands=None, filename=None):
 		if name == 'cheating':
 			continue
 		L2[name] = np.sqrt(np.sum((means['cheating'] - means[name])**2, axis=1))
-	for name in L2:
-		plt.plot(np.arange(1, 13), L2[name], label=name)
+
+	fig, ax = plt.subplots()
+	ind = np.arange(1, 13)
+	width = 1/float(len(L2) + 1)
+	colors = ['r', 'g', 'k', 'm']
+	algs = ['naive', 'objects', 'objects_walls', 'refpt']
 	if data and commands:
 		covs = {pt : np.cov(data[pt].T) for pt in data}
 		var_parallel = [covs[i][0, 0] if commands[i].direction[0] else covs[i][1, 1] for i in range(1, 13)]
 		stds = [np.sqrt(var) for var in var_parallel]
-		plt.plot(np.arange(1, 13), stds, 'k--', label='Empirical STD')
-	ax = plt.gca()
-	ax.set_xlim([1, 12])
+		ax.scatter(ind + 2*width, stds, c='b', marker='*', label='Empirical STD')
+	for i, alg in enumerate(algs):
+		ax.bar(ind + i*width, L2[alg], width, color=colors[i], label=alg)
+	ax.set_xlim([1, 13])
+	ymin, ymax = ax.get_ylim()
+	ax.set_ylim([0, ymax])
+	ax.set_xticks(ind + 2*width)
+	ax.set_xticklabels(ind)
 	ax.set_xlabel('Command Number')
 	ax.set_ylabel('Distance (in)')
-	plt.legend()
+	plt.legend(loc='upper center')
 	plt.title('Distance between estimated and empirical means')
 	if filename:
 		plt.savefig(filename, format='pdf')
