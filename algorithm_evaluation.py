@@ -53,7 +53,7 @@ algorithms is a dictionary of the form {<algorithm name> : <function>}
 
 Assumes that all algorithms (except cheating) take in only two arguments, command and world
 """
-def test_algorithms(data, commands, world, algorithms, plot=True):
+def test_algorithms(data, commands, world, algorithms, plot=True, filename=None):
 	# Cheating algorithm is special case
 	probs = {"cheating" : get_cheating_prob(data)}
 	for alg_name in algorithms:
@@ -75,6 +75,8 @@ def test_algorithms(data, commands, world, algorithms, plot=True):
 		ax.set_xlabel('Command Number')
 		ax.set_ylabel('log prob of product of data')
 		plt.legend()
+		if filename:
+			plt.savefig(filename, format='pdf')
 		plt.show()
 	else:
 		return probs
@@ -126,7 +128,7 @@ def get_all_distributions(data, commands, world):
 def get_means(distributions):
 	return {name : np.array([distributions[name][i].mean for i in range(1, 13)]) for name in distributions}
 
-def eval_means(means, data=None, commands=None):
+def eval_means(means, data=None, commands=None, filename=None):
 	L2 = {}
 	for name in means:
 		if name == 'cheating':
@@ -145,6 +147,8 @@ def eval_means(means, data=None, commands=None):
 	ax.set_ylabel('Distance (in)')
 	plt.legend()
 	plt.title('Distance between estimated and empirical means')
+	if filename:
+		plt.savefig(filename, format='pdf')
 	plt.show()
 	return L2
 
@@ -152,19 +156,29 @@ def eval_means(means, data=None, commands=None):
 # Looks like there was significant overestimation in that case
 # That's very possible, a lot of people in the second scene 1 trial expressed confusion about that - Eddie
 if __name__ == '__main__':
-	datafile = 'data/scene_1_images_annotated_preprocessed.dat'
-	cmnds = commands
-	wrld = world
-	if len(sys.argv) > 1 and sys.argv[1] == '2':
-		datafile = 'data/scene_2_images_annotated_preprocessed.dat'
-		cmnds = commands_2
-		wrld = world_2
+	if len(sys.argv) > 1:
+		scenenum = sys.argv[1]
+		datafile = 'data/scene_' + scenenum + '_images_annotated_preprocessed.dat'
+		scenenum = int(scenenum) - 1
+		commands = all_commands[scenenum]
+		world = all_worlds[scenenum]
+	else:
+		print "need scene number"
+		sys.exit(1)
 	with open(datafile) as dat:
 		data = pickle.load(dat)
-	if sys.argv[-1] == 'means':
-		distributions = get_all_distributions(data, cmnds, wrld)
+	if len(sys.argv) > 2 and sys.argv[2] == 'means':
+		distributions = get_all_distributions(data, commands, world)
 		means = get_means(distributions)
-		L2 = eval_means(means, data, cmnds)
+		if len(sys.argv) > 3 and sys.argv[3] == 'save':
+			print "Saved"
+			L2 = eval_means(means, data, commands, filename=sys.argv[4])
+		else:
+			L2 = eval_means(means, data, commands)
 	else:
-		test_algorithms(data, cmnds, wrld, algs_to_test)
+		if len(sys.argv) > 2 and sys.argv[2] == 'save':
+			print "Saved"
+			test_algorithms(data, commands, world, algs_to_test, filename=sys.argv[3])
+		else:
+			test_algorithms(data, commands, world, algs_to_test)
 

@@ -29,7 +29,7 @@ def get_means(data):
 def get_covariances(data):
 	return {pt : np.cov(data[pt].T) for pt in data}
 
-def plot_distance_parallel(data, filename=None):
+def plot_distance_parallel(data, commands, filename=None):
 	fig, ax = plt.subplots()
 	covariances = get_covariances(data)
 	variances_in_direction = [covariances[i][0, 0] if commands[i].direction[0] else covariances[i][1, 1] for i in range(1, 13)]
@@ -51,7 +51,7 @@ def plot_distance_parallel(data, filename=None):
 
 	plt.show()
 
-def plot_distance_orthogonal(data):
+def plot_distance_orthogonal(data, commands):
 	fig, ax = plt.subplots()
 	covariances = get_covariances(data)
 	variances_in_direction = [covariances[i][1, 1] if commands[i].direction[0] else covariances[i][0, 0] for i in range(1, 13)]
@@ -127,13 +127,25 @@ def visualize_all_distributions(data, commands, algorithm, world, filename=None)
 	plt.show()
 
 if __name__ == '__main__':
-	#data = load_data('data/point_data.csv')
-	datafile = 'data/scene_2_images_annotated_preprocessed.dat'
+	if len(sys.argv) > 1:
+		scenenum = sys.argv[1]
+		datafile = 'data/scene_' + scenenum + '_images_annotated_preprocessed.dat'
+		scenenum = int(scenenum) - 1
+		commands = all_commands[scenenum]
+		world = all_worlds[scenenum]
+	else:
+		print "need scene number"
+		sys.exit(1)
 	with open(datafile) as dat:
 		data = pickle.load(dat)
-		print data
-
-	if len(sys.argv) == 3 and sys.argv[1] == 'save':
-		visualize(data, sys.argv[2])
+	if len(sys.argv) > 2 and sys.argv[2] != 'save':
+		if len(sys.argv) > 3 and sys.argv[3] == 'save':
+			print "Saved"
+			visualize_all_distributions(data, commands, sys.argv[2], world, sys.argv[4])
+		else:
+			visualize_all_distributions(data, commands, sys.argv[2], world)
+	elif len(sys.argv) == 4 and sys.argv[2] == 'save':
+		print "Saved"
+		visualize(data, world, commands, sys.argv[3])
 	else:
-		visualize(data, world_2, commands_2)
+		visualize(data, world, commands)

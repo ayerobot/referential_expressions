@@ -55,25 +55,25 @@ class World:
 
 # Object dimensions and commands from https://docs.google.com/document/d/1TbAKCrdEfgD6nCEjhlpJ4BpAJcmeSajsGQwb4HBsh7U/edit
 #TODO: relationship between "the" and object name
-keyboard = Reference("the keyboard", np.array([[33.375, 13.5], [38.5, 13.5], [38, 24.625], [33, 24.375]]))
-car = Reference("the car", np.array([[9.5, 21.5], [10.625, 21.25], [11.625, 24], [10.375, 24.5]]))
-bowl = Reference("the pink bowl", (np.array([19.75, 10]), 2.5))
+keyboard_1 = Reference("the keyboard", np.array([[33.375, 13.5], [38.5, 13.5], [38, 24.625], [33, 24.375]]))
+car_1 = Reference("the car", np.array([[9.5, 21.5], [10.625, 21.25], [11.625, 24], [10.375, 24.5]]))
+bowl_1 = Reference("the pink bowl", (np.array([19.75, 10]), 2.5))
 
-world = World([keyboard, car, bowl], 48, 36)
+world_1 = World([keyboard_1, car_1, bowl_1], 48, 36)
 
-commands = {
-	1 : Command("4 inches left of the car", world),
-	2 : Command("1 foot left of the keyboard", world),
-	3 : Command("1 and a half feet right of the car",world),
-	4 : Command("4 inches in front of the pink bowl", world),
-	5 : Command("5 and a half inches behind the keyboard", world),
-	6 : Command("2 inches left of the pink bowl", world),
-	7 : Command("1 and a half inches behind the car", world),
-	8 : Command("7 inches right of the pink bowl", world ),
-	9 : Command("16 inches in front of the car", world),
-	10 : Command("2 feet behind the pink bowl",world),
-	11 : Command("3 inches right of the keyboard",world),
-	12 : Command("4 and a half inches in front of the keyboard",world)
+commands_1 = {
+	1 : Command("4 inches left of the car", world_1),
+	2 : Command("1 foot left of the keyboard", world_1),
+	3 : Command("1 and a half feet right of the car",world_1),
+	4 : Command("4 inches in front of the pink bowl", world_1),
+	5 : Command("5 and a half inches behind the keyboard", world_1),
+	6 : Command("2 inches left of the pink bowl", world_1),
+	7 : Command("1 and a half inches behind the car", world_1),
+	8 : Command("7 inches right of the pink bowl", world_1 ),
+	9 : Command("16 inches in front of the car", world_1),
+	10 : Command("2 feet behind the pink bowl",world_1),
+	11 : Command("3 inches right of the keyboard",world_1),
+	12 : Command("4 and a half inches in front of the keyboard",world_1)
 }
 
 #SCENE 2
@@ -98,4 +98,7 @@ commands_2 = {
 	11 : Command("7 inches right of the keyboard",world_2),
 	12 : Command("1 and a half inches in front of the keyboard",world_2)
 }
+
+all_worlds = [world_1, world_2]
+all_commands = [commands_1, commands_2]
 
