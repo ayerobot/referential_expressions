@@ -68,13 +68,21 @@ def test_algorithms(data, commands, world, algorithms, plot=True, filename=None)
 		probs[alg_name] = np.array(alg_probs)
 
 	if plot:
-		for alg in probs:
-			plt.plot(np.arange(1, 13), probs[alg], label=alg)
-		ax = plt.gca()
-		ax.set_xlim([1, len(commands)])
+		fig, ax = plt.subplots()
+		ind = np.arange(1, 13)
+		width = 1/float(len(probs) + 1)
+		colors = ['b', 'r', 'g', 'k', 'm']
+		algs = ['cheating', 'naive', 'objects', 'objects_walls', 'refpt']
+		for i, alg in enumerate(algs):
+			ax.bar(ind + i*width, -probs[alg], width, color=colors[i], label=alg)
+		# add some text for labels, title and axes ticks
 		ax.set_xlabel('Command Number')
-		ax.set_ylabel('log prob of product of data')
-		plt.legend()
+		ax.set_ylabel('-log prob of product of data')
+		ax.set_xlim([1, 13])
+		ax.set_xticks(ind + 2.5*width)
+		ax.set_xticklabels(ind)
+
+		plt.legend(loc='upper center')
 		if filename:
 			plt.savefig(filename, format='pdf')
 		plt.show()
