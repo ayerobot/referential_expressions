@@ -35,9 +35,10 @@ def preprocess_data_npy(filename):
 		basis_vecs = np.concatenate((b1.T, b2.T), axis=1)
 
 		for i in range(3, len(trial)): #for every elem subtracting out origin
-			point = np.matrix(trial[i]) - bottom_left
-			point_new_basis = np.multiply(np.linalg.inv(basis_vecs)*(point.T), np.matrix([x_len, y_len]).T)
-			results[i - 2] = results.get(i - 2, []) + np.array((point_new_basis.T)).tolist()
+			if trial[i][0] != None:
+				point = np.matrix(trial[i]) - bottom_left
+				point_new_basis = np.multiply(np.linalg.inv(basis_vecs)*(point.T), np.matrix([x_len, y_len]).T)
+				results[i - 2] = results.get(i - 2, []) + np.array((point_new_basis.T)).tolist()
 
 	for i in range(1, 13): #hardcoding this number in for now
 		results[i] = np.array(results[i])
