@@ -32,15 +32,21 @@ def get_covariances(data):
 def plot_distance_parallel(data, commands, filename=None):
 	fig, ax = plt.subplots()
 	covariances = get_covariances(data)
-	variances_in_direction = [covariances[i][0, 0] if commands[i].direction[0] else covariances[i][1, 1] for i in range(1, 13)]
-	distance = [commands[i].distance for i in range(1, 13)]
+	variances_in_direction = [covariances[i][0, 0] if commands[i].direction[0] else covariances[i][1, 1] for i in range(1, len(data) + 1)]
+	distance = np.array([commands[i].distance for i in range(1, len(data) + 1)])
 	#calculating line of best fit
-	line_bestfit = np.polyfit(distance, variances_in_direction, 1)
-	print "Linear fit results: slope= " + str(line_bestfit[0]) + " intercept = " + str(line_bestfit[1]) 
+	degree = 1
+	line_bestfit = np.polyfit(distance, variances_in_direction, degree)
+	equation = str(line_bestfit[0]) + "x + " + str(line_bestfit[1])
+	print "Linear fit results: " + equation
 	#plotting line of best fit
-	distance_range = np.linspace(0, 30)
-	bestfit_points = distance_range*line_bestfit[0] + line_bestfit[1]
-	plt.plot(distance_range, bestfit_points, label="var = 0.43*dist - 0.59")
+	distance_range = np.linspace(0, distance.max())
+	bestfit_points = np.ones(distance_range.shape)
+	for i in range(degree + 1):
+		bestfit_points  = bestfit_points + (distance_range**(degree - i))*line_bestfit[i]
+	bestfit_points2 = distance_range*0.43 - 0.59
+	plt.plot(distance_range, bestfit_points, label=equation)
+	plt.plot(distance_range, bestfit_points2, label='old equation')
 	plt.legend()
 	plt.scatter(distance, variances_in_direction)
 	ax.set_xlabel('Distance of Command (inches)')
@@ -54,8 +60,8 @@ def plot_distance_parallel(data, commands, filename=None):
 def plot_distance_orthogonal(data, commands):
 	fig, ax = plt.subplots()
 	covariances = get_covariances(data)
-	variances_in_direction = [covariances[i][1, 1] if commands[i].direction[0] else covariances[i][0, 0] for i in range(1, 13)]
-	distance = [commands[i].distance for i in range(1, 13)]
+	variances_in_direction = [covariances[i][1, 1] if commands[i].direction[0] else covariances[i][0, 0] for i in range(1, len(data))]
+	distance = [commands[i].distance for i in range(1, len(data))]
 	plt.scatter(distance, variances_in_direction)
 	ax.set_xlabel('Distance of Command (inches)')
 	ax.set_ylabel('Variance orthogonal to direction of command')
