@@ -176,7 +176,7 @@ if __name__ == '__main__':
 	if len(sys.argv) > 1:
 		scenenum = sys.argv[1]
 		datafile = 'data/scene_' + scenenum + '_images_annotated_preprocessed.dat'
-		scenenum = int(scenenum) - 1
+		scenenum = int(scenenum)
 		commands = all_commands[scenenum]
 		world = all_worlds[scenenum]
 	else:

@@ -153,18 +153,18 @@ def ow_refpt_algorithm(cmd, world, k1=4.8, k2=3.9):
 	# Difference between distance to closest wall and object reference in command
 	wall_distance_diff = ref_dists[cmd.reference] - min_wall_dists
 	wall_distance_diff[wall_distance_diff < 0] = 0
-	#plt.contourf(x, y, wall_distance_diff)
-	#plt.show()
+	#
 	wall_distance_vals = expon.pdf(wall_distance_diff, scale=k2)
 
 	mean_prob = naive_vals*ref_distance_vals*wall_distance_vals
+	plt.contourf(x, y, mean_prob)
+	plt.show()
 	loc = np.where(mean_prob == mean_prob.max())
 	mean = 0.1*np.array([loc[0][0], loc[1][0]])
 
 	mv_dist = multivariate_normal(mean, naive_dist.cov)
 
 	return mv_dist
-
 
 
 

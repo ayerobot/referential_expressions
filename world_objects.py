@@ -149,6 +149,6 @@ commands_4 = {
 }
 
 
-all_worlds = [world_1, world_2, world_3, world_4]
-all_commands = [commands_1, commands_2, commands_3, commands_4]
+all_worlds = {1 : world_1, 2 : world_2, 3 : world_3, 4 : world_4}
+all_commands = {1 : commands_1, 2 : commands_2, 3 : commands_3, 4 : commands_4}
 
