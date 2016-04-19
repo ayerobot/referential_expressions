@@ -76,11 +76,16 @@ def visualize(data, world, commands, filename=None):
 	objects.set_array(np.array([0, 0, 0, 1]))
 	ax.add_collection(objects)
 
+
 	colors = cm.rainbow(np.linspace(0, 1, 12))
+	markers = ['+', 'o', 'v', '>', 's', 'p']
 	for i in range(1, 13):
-		plt.scatter(data[i][:,0], data[i][:,1], c=colors[i-1], marker='+')
+		plt.scatter(data[i][:,0], data[i][:,1], c=colors[i-1], marker=markers[(i - 1) % 6], label=str(i))
 		estimated_pos = estimate_pos(commands[i])
 		plt.scatter(estimated_pos[0], estimated_pos[1], c=np.array([0, 0, 0, 1]), marker='o')
+		plt.text(estimated_pos[0] + 0.25, estimated_pos[1] + 0.25, str(i))
+
+	plt.legend()
 
 	if filename:
 		plt.savefig(filename, format='pdf')
