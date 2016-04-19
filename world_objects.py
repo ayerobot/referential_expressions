@@ -109,18 +109,18 @@ bowl_3 = Reference("the pink bowl", (np.array([21.52, 27.12]), 2.5))
 world_3 = World([keyboard_3, car_3, bowl_3], 48, 36)
 
 commands_3 = {
-	1 : Command("1 and a half feet left of the car", world_2),
-	2 : Command("2 feet right of the keyboard", world_2),
-	3 : Command("7 inches right of the car",world_2),
-	4 : Command("8 inches in front of the pink bowl", world_2),
-	5 : Command("12 inches behind the keyboard", world_2),
-	6 : Command("1 foot left of the pink bowl", world_2),
-	7 : Command("13 inches behind the car", world_2),
-	8 : Command("4 inches right of the pink bowl", world_2),
-	9 : Command("2 and a half inches in front of the car", world_2),
-	10 : Command("1 foot behind the pink bowl",world_2),
-	11 : Command("3 inches left of the keyboard",world_2),
-	12 : Command("1 inch in front of the keyboard",world_2)
+	1 : Command("1 and a half feet left of the car", world_3),
+	2 : Command("2 feet right of the keyboard", world_3),
+	3 : Command("7 inches right of the car",world_3),
+	4 : Command("8 inches in front of the pink bowl", world_3),
+	5 : Command("12 inches behind the keyboard", world_3),
+	6 : Command("1 foot left of the pink bowl", world_3),
+	7 : Command("13 inches behind the car", world_3),
+	8 : Command("4 inches right of the pink bowl", world_3),
+	9 : Command("2 and a half inches in front of the car", world_3),
+	10 : Command("1 foot in front of the pink bowl",world_3),
+	11 : Command("3 inches left of the keyboard",world_3),
+	12 : Command("1 inch in front of the keyboard",world_3)
 }
 
 all_worlds = [world_1, world_2, world_3]
