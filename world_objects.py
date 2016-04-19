@@ -123,7 +123,32 @@ commands_3 = {
 	12 : Command("1 inch in front of the keyboard",world_3)
 }
 
-all_worlds = [world_1, world_2, world_3]
-all_commands = [commands_1, commands_2, commands_3]
 
+
+#SCENE 4
+
+lid_4 = Reference("the lid", np.array([[17.47472168, 19.46584422], [21.73802964, 24.92901409], [31.6325644, 17.17258576], [ 27.4779704, 11.81646785]]))
+car_4 = Reference("the car", np.array([[8.48978647, 6.82315346], [11.69059143, 6.70700941], [11.50053753, 7.99573913], [8.72481198, 8.00336475]]))
+bowl_4 = Reference("the pink bowl", (np.array([ 37.28647253, 28.64357073]), 2.5))
+
+world_4 = World([lid_4, car_4, bowl_4], 48, 36)
+
+commands_4 = {
+	1 : Command("3 inches left of the car", world_4),
+	2 : Command("1 foot left of the lid", world_4),
+	3 : Command("8 inches in front of the pink bowl",world_4),
+	4 : Command("3 and a half inches behind the lid", world_4),
+	5 : Command("1 and a half feet left of the pink bowl", world_4),
+	6 : Command("9 and a half inches behind the car", world_4),
+	7 : Command("3 inches right of the pink bowl", world_4),
+	8 : Command("1 and a half feet right of the car", world_4),
+	9 : Command("4 and a half inches in front of the car", world_4),
+	10 : Command("1 inch behind the pink bowl",world_4),
+	11 : Command("10 inches right of the lid",world_4),
+	12 : Command("16 inches in front of the lid",world_4)
+}
+
+
+all_worlds = [world_1, world_2, world_3, world_4]
+all_commands = [commands_1, commands_2, commands_3, commands_4]
 

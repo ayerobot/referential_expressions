@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #determines x/y pixel coordinates of points on the image using matplotlib and handler
 import numpy as np
 import matplotlib.pyplot as plt
