@@ -98,10 +98,7 @@ def visualize_distribution(points, distribution, world, filename=None, block=Tru
 	ax.set_ylim([0, world.ydim]) # Set y dim to 3 feet
 
 	x, y = np.mgrid[0:world.xdim:.1, 0:world.ydim:.1]
-	pos = np.empty(x.shape + (2,))
-	pos[:, :, 0] = x
-	pos[:, :, 1] = y
-	plt.contourf(x, y, distribution.pdf(pos))
+	plt.contourf(x, y, distribution.pdf(np.dstack((x, y))))
 
 	objects = PatchCollection([ref.patch for ref in world.references], cmap=cm.gray, alpha=1)
 	objects.set_array(np.array([1, 1, 1]))

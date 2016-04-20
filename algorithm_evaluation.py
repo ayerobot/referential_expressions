@@ -11,7 +11,8 @@ import pickle
 algs_to_test = {'naive' : naive_algorithm, 
 				'objects' : objects_algorithm, 
 				'objects_walls' : objects_walls_algorithm,
-				'refpt' : ow_refpt_algorithm}
+				'refpt' : ow_refpt_algorithm,
+				'loglin' : loglin_alg}
 
 def load_data(filename):
 	text = None
@@ -106,23 +107,26 @@ def eval_algorithms(algorithm_probs):
 	return diffs
 
 def gridsearch(data, commands, world):
-	k1 = np.arange(4.1, 5, .1)
-	k2 = np.arange(3.5, 4.2, .1)
+	k1 = np.arange(0, 1, .1)
+	k2 = np.arange(0, 0.2, .01)
+	k3 = np.arange(0, 0.1, .01)
 	print k2
-	L2 = np.zeros((len(k1), len(k2)))
+	L2 = np.zeros((len(k1), len(k2), len(k3)))
 	cheating_prob = get_cheating_prob(data)
 	for i, val1 in enumerate(k1):
 		for j, val2 in enumerate(k2):
-			print float(len(k2)*i + j)/L2.size*100, "%"
-			probs = np.array([np.sum(np.log(ow_refpt_algorithm(commands[num], world, val1, val2).pdf(data[num]))) for num in range(1, 13)])
-			L2[i, j] = np.linalg.norm(cheating_prob - probs)
+			for k, val3 in enumerate(k3):
+				print float(len(k2)*len(k3)*i + len(k3)*j + k)/L2.size*100, "%"
+				probs = np.array([np.sum(np.log(loglin_alg(commands[num], world, [val1, val2, val3]).pdf(data[num]))) for num in range(1, 13)])
+				L2[i, j, k] = np.linalg.norm(cheating_prob - probs)
 	print "100.0 %"
 	loc = np.where(L2 == L2.min())
 	print
 	print 'k1 =', k1[loc[0][0]]
 	print 'k2 =', k2[loc[1][0]]
-	plt.contourf(k2, k1, L2)
-	plt.show()
+	print 'k3 =', k3[loc[2][0]]
+	#plt.contourf(k2, k1, L2)
+	#plt.show()
 	return L2
 
 def get_all_distributions(data, commands, world):
