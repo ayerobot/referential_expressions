@@ -27,7 +27,7 @@ class LoglinDistribution:
 		ref_dists = get_ref_dists(x, y, self.world)
 
 		features = []
-		features.append(feature_naive_mean(x, y, self.command, self.world))
+		features.append(feature_naive(x, y, self.command, self.world))
 		features.append(feature_objects(x, y, self.command, self.world, ref_dists))
 		features.append(feature_walls(x, y, self.command, self.world, ref_dists))
 		vals = np.exp(np.sum(fi * wi for fi, wi in zip(features, self.w)))
@@ -187,11 +187,11 @@ def ow_refpt_algorithm(cmd, world, k1=4.8, k2=3.9):
 
 	return mv_dist
 
-def loglin_alg(cmd, world, w=[3.0379, 0.1143, 0.8398]):
+def loglin_alg(cmd, world, w=[0.6055, 0.1172, 0.0121]):
 	return LoglinDistribution(cmd, world, w)
 
 
-def feature_naive_mean(x, y, cmd, world):
+def feature_naive(x, y, cmd, world):
 	variance_cmd_parallel = max(cmd.distance*variance_scale + variance_offset, 0.5)
 	variance_cmd_ortho = 0.5
 	mean = estimate_pos(cmd)
@@ -223,6 +223,19 @@ def feature_walls(x, y, cmd, world, ref_dists):
 	wall_distance_diff = ref_dists[cmd.reference] - min_wall_dists
 	wall_distance_diff[wall_distance_diff < 0] = 0
 	return -wall_distance_diff
+
+def get_feature_vals(x, y, cmd, world):
+	ref_dists = get_ref_dists(x, y, world)
+
+	f_naive = feature_naive(x, y, cmd, world)
+	f_objects = feature_objects(x, y, cmd, world, ref_dists)
+	f_walls = feature_walls(x, y, cmd, world, ref_dists)
+
+	f_matrix = np.array([el.flatten() for el in (f_naive, f_objects, f_walls)])
+	f_matrix = f_matrix.T
+	return f_matrix
+
+
 
 
 
