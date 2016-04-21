@@ -187,7 +187,7 @@ def ow_refpt_algorithm(cmd, world, k1=4.8, k2=3.9):
 
 	return mv_dist
 
-def loglin_alg(cmd, world, w=[0.7, 0.1, 0.3]):
+def loglin_alg(cmd, world, w=[3.0379, 0.1143, 0.8398]):
 	return LoglinDistribution(cmd, world, w)
 
 
@@ -223,8 +223,6 @@ def feature_walls(x, y, cmd, world, ref_dists):
 	wall_distance_diff = ref_dists[cmd.reference] - min_wall_dists
 	wall_distance_diff[wall_distance_diff < 0] = 0
 	return -wall_distance_diff
-
-
 
 
 

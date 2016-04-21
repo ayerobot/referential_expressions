@@ -32,6 +32,12 @@ def load_data(filename):
 
 	return data
 
+def load_pickle_data(filename):
+	data = None
+	with open(filename) as datfile:
+		data = pickle.load(datfile)
+	return data
+
 """
 Cheating algorithm is a bit of a special case since it doesn't take in command, world. 
 Therefore this is a special method just to calculate it.
@@ -172,6 +178,38 @@ def eval_means(means, data=None, commands=None, filename=None):
 		plt.savefig(filename, format='pdf')
 	plt.show()
 	return L2
+
+def get_feature_values(data, commands, world):
+	f_naive_mean = []
+	f_objects = []
+	f_walls = []
+	for i in range(1, 13):
+	    x = data[i][:,0]
+	    y = data[i][:,1]
+	    ref_dists = get_ref_dists(x, y, world)
+	    f_naive_mean.append(feature_naive_mean(x, y, commands[i], world))
+	    f_objects.append(feature_objects(x, y, commands[i], world, ref_dists))
+	    f_walls.append(feature_walls(x, y, commands[i], world, ref_dists))
+	f_naive_mean = np.hstack(f_naive_mean)
+	f_objects = np.hstack(f_objects)
+	f_walls = np.hstack(f_walls)
+	return f_naive_mean, f_objects, f_walls
+
+def test_scene_1(data, commands, world):
+	x, y = np.mgrid[0:world.xdim:.1, 0:world.ydim:.1]
+	cheat_dist = cheating_algorithm(data[1])
+	pos = np.dstack((x, y))
+	cheat_vals = cheat_dist.pdf(pos)
+	ref_dists = get_ref_dists(x, y, world)
+	f_naive = feature_naive_mean(x, y, commands[1], world)
+	f_objects = feature_objects(x, y, commands[1], world, ref_dists)
+	f_walls = feature_walls(x, y, commands[1], world, ref_dists)
+
+
+	avg_1 = np.mean(feature_naive_mean(data[1][:,0], data[1][:,1], commands[1], world))
+	avg_2 = np.mean(f_objects[mask])
+	avg_3 = np.mean(f_walls[mask])
+	return f_naive, f_objects, f_walls, [avg_1, avg_2, avg_3]
 
 # I wonder if discrepency in command 7 is because of duct tape?
 # Looks like there was significant overestimation in that case
