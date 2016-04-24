@@ -15,9 +15,15 @@ class LoglinDistribution:
 	def __init__(self, command, world, w=[1, 1, 1]):
 		self.command = command
 		self.world = world
-		self.w = w
+		self.w = np.matrix(w).T
 
-	def pdf(self, pts):
+		x, y = np.mgrid[0:world.xdim:.1, 0:world.ydim:.1]
+
+		self.feature_matrix = get_feature_matrix(x, y, command, world)
+
+		self.normalization = np.sum(np.exp(self.feature_matrix*self.w))
+
+	def pdf(self, pts, normalize=False):
 		if pts.ndim == 3:
 			x = pts[:,:,0]
 			y = pts[:,:,1]
@@ -30,8 +36,15 @@ class LoglinDistribution:
 		features.append(feature_naive(x, y, self.command, self.world))
 		features.append(feature_objects(x, y, self.command, self.world, ref_dists))
 		features.append(feature_walls(x, y, self.command, self.world, ref_dists))
-		vals = np.exp(np.sum(fi * wi for fi, wi in zip(features, self.w)))
+		vals = np.exp(np.sum(fi * wi[0] for fi, wi in zip(features, np.array(self.w))))
+
+		if normalize:
+			vals = vals/self.normalization
 		return vals
+
+	def set_weights(self, w):
+		self.w = np.matrix(w).T
+		self.normalization = np.sum(np.exp(self.feature_matrix*self.w))
 
 def estimate_reference_pt(ref, direction):
 	center = ref.center
@@ -187,7 +200,7 @@ def ow_refpt_algorithm(cmd, world, k1=4.8, k2=3.9):
 
 	return mv_dist
 
-def loglin_alg(cmd, world, w=[0.6055, 0.1172, 0.0121]):
+def loglin_alg(cmd, world, w=[0.8494, 0.3951, 0.0111]): # w = [0.57, 0.19, 0.24]
 	return LoglinDistribution(cmd, world, w)
 
 
@@ -224,7 +237,7 @@ def feature_walls(x, y, cmd, world, ref_dists):
 	wall_distance_diff[wall_distance_diff < 0] = 0
 	return -wall_distance_diff
 
-def get_feature_vals(x, y, cmd, world):
+def get_feature_matrix(x, y, cmd, world):
 	ref_dists = get_ref_dists(x, y, world)
 
 	f_naive = feature_naive(x, y, cmd, world)
@@ -233,7 +246,7 @@ def get_feature_vals(x, y, cmd, world):
 
 	f_matrix = np.array([el.flatten() for el in (f_naive, f_objects, f_walls)])
 	f_matrix = f_matrix.T
-	return f_matrix
+	return np.matrix(f_matrix)
 
 
 
