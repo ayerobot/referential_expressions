@@ -17,7 +17,7 @@ expvals = get_expvals(hx, lambda, zlambda, Tx_all);
 epsilon = 0.01;
 
 while (norm(expvals - theta) > accuracy)
-    disp(['Error = ' num2str(norm(expvals - theta))])
+    disp(['Enorm(expvals - theta))
     lambda = lambda - epsilon*(expvals - theta);
     zlambda = get_zlambda(hx, lambda, Tx_all);
     expvals = get_expvals(hx, lambda, zlambda, Tx_all);
