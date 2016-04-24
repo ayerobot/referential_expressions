@@ -11,7 +11,8 @@ import pickle
 
 from world_objects import *
 from reference_algorithms import *
-from algorithm_evaluation import load_data, algs_to_test
+from algorithm_evaluation import algs_to_test
+from data_utils import *
 
 
 """
