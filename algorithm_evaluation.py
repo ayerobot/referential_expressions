@@ -14,30 +14,6 @@ algs_to_test = {'naive' : naive_algorithm,
 				'refpt' : ow_refpt_algorithm,
 				'loglin' : loglin_alg}
 
-def load_data(filename):
-	text = None
-	with open(filename) as f:
-		text = f.readline()
-
-	text = text.split('\r')
-	data = {}
-	for line in text:
-		line = line.split(',', 1)
-		point_num = int(line[0])
-		point_loc = [float(el) for el in line[1][2:-2].split(',')] # Parsing the tuple is annoying
-		data[point_num] = data.get(point_num, []) + [point_loc]
-
-	for i in range(1, 13):
-		data[i] = np.array(data[i])
-
-	return data
-
-def load_pickle_data(filename):
-	data = None
-	with open(filename) as datfile:
-		data = pickle.load(datfile)
-	return data
-
 """
 Cheating algorithm is a bit of a special case since it doesn't take in command, world. 
 Therefore this is a special method just to calculate it.
@@ -112,29 +88,6 @@ def eval_algorithms(algorithm_probs):
 	print "L2 Norms: ", L2
 	return diffs
 
-def gridsearch(data, commands, world):
-	k1 = np.arange(0, 1, .1)
-	k2 = np.arange(0, 0.2, .01)
-	k3 = np.arange(0, 0.1, .01)
-	print k2
-	L2 = np.zeros((len(k1), len(k2), len(k3)))
-	cheating_prob = get_cheating_prob(data)
-	for i, val1 in enumerate(k1):
-		for j, val2 in enumerate(k2):
-			for k, val3 in enumerate(k3):
-				print float(len(k2)*len(k3)*i + len(k3)*j + k)/L2.size*100, "%"
-				probs = np.array([np.sum(np.log(loglin_alg(commands[num], world, [val1, val2, val3]).pdf(data[num]))) for num in range(1, 13)])
-				L2[i, j, k] = np.linalg.norm(cheating_prob - probs)
-	print "100.0 %"
-	loc = np.where(L2 == L2.min())
-	print
-	print 'k1 =', k1[loc[0][0]]
-	print 'k2 =', k2[loc[1][0]]
-	print 'k3 =', k3[loc[2][0]]
-	#plt.contourf(k2, k1, L2)
-	#plt.show()
-	return L2
-
 def get_all_distributions(data, commands, world):
 	global algs_to_test
 	distributions = {}
@@ -179,18 +132,7 @@ def eval_means(means, data=None, commands=None, filename=None):
 	plt.show()
 	return L2
 
-def generate_feature_vectors(data, commands, world):
-	x, y = np.mgrid[0:world.xdim:.1, 0:world.ydim:.1]
-	
-	f_matrix_all = []
-	f_data_all = []
-	for i in range(1, 13):
-		f_matrix_all.append(get_feature_vals(x, y, commands[i], world))
-		f_data_all.append(get_feature_vals(data[i][:,0], data[i][:,1], commands[i], world))
-	Tx = np.vstack(f_matrix_all)
-	theta = np.mean(np.vstack(f_data_all), 0)
 
-	return Tx, theta
 
 # I wonder if discrepency in command 7 is because of duct tape?
 # Looks like there was significant overestimation in that case

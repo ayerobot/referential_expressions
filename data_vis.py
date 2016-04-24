@@ -11,7 +11,8 @@ import pickle
 
 from world_objects import *
 from reference_algorithms import *
-from algorithm_evaluation import load_data, algs_to_test
+from algorithm_evaluation import algs_to_test
+from data_utils import *
 
 
 """
@@ -112,6 +113,22 @@ def visualize_distribution(points, distribution, world, filename=None, block=Tru
 	if block:
 		plt.show()
 
+"""
+	elif algorithm == "loglin":
+		weights = np.array([[0.7302, 0.1143, -0.6606],
+    						[0.7637, 0.2605, 0.1052],
+						    [0.3115, 0.0263, 0.2983],
+						    [1.6282, 0.0824, -0.5241],
+						    [1.8234, 0.0813, 1.2681],
+						    [1.0695, 0.0824, 0.1040],
+						    [0.4629, 0.1143, 0.1314],
+						    [0.8889, 0.4657, -3.4583],
+						    [0.4676, 0.5182, 0.0042],
+						    [0.3888, 0.3969, 0.1461],
+						    [0.6784, 0.0813, 0.0538],
+						    [1.2481, 0.0813, -2.9671]])
+		distributions = {cmdnum : loglin_alg(commands[cmdnum], world, weights[cmdnum-1,:]) for cmdnum in commands}
+	"""
 # algorithm is a string, either 'cheating', 'random', or 'naive'
 def visualize_all_distributions(data, commands, algorithm, world, filename=None):
 	fig = plt.figure(figsize=(18, 8))
@@ -119,6 +136,7 @@ def visualize_all_distributions(data, commands, algorithm, world, filename=None)
 	distributions = None
 	if algorithm == "cheating":
 		distributions = {pts : cheating_algorithm(data[pts]) for pts in data}
+
 	elif algorithm in algs_to_test:
 		distributions = {cmdnum : algs_to_test[algorithm](commands[cmdnum], world) for cmdnum in commands}
 	else:
