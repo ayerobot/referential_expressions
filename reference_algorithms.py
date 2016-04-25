@@ -171,10 +171,10 @@ def loglin_alg(cmd, world, w=[0.8494, 0.3951, 0.0111]): # w = [0.57, 0.19, 0.24]
 
 
 
-
-
-
-
+#convenience function, for a 2d vector of x y points returns a vector of corresponding feature vectors
+def feat_vals_vec(points, cmd, world):
+	feat_vals = [get_feature_vals(point[0], point[1], cmd, world).flatten() for point in points]
+	return np.array(feat_vals)
 
 
 

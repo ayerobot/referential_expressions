@@ -140,7 +140,7 @@ def visualize_all_distributions(data, commands, algorithm, world, filename=None)
 	elif algorithm in algs_to_test:
 		distributions = {cmdnum : algs_to_test[algorithm](commands[cmdnum], world) for cmdnum in commands}
 	else:
-		raise ValueError("Unknwon Algorithm: " + str(algorithm))
+		raise ValueError("Unknown Algorithm: " + str(algorithm))
 
 	for i in range(1, 13):
 		plt.subplot(3, 4, i)
