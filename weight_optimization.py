@@ -2,6 +2,7 @@ import numpy as np
 import scipy.io as sio
 
 from reference_algorithms import *
+from loglin_algorithm import get_feature_matrix
 
 """
 Performs a gridsearch over three weights for loglin algorithm.

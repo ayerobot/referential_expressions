@@ -13,6 +13,12 @@
 \begin{document}
 \section*{Current Model:}
 
+\subsection{Goal}
+Estimate a function of the form:
+\[
+f(x, y, \textmd{command}, \textmd{world}) = \frac{1}{z(\lambda, \textmd{command}, \textmd{world})}\exp\bigg(\sum_{i = 1}^c \lambda_iT_i(x, y, \textmd{command}, \textmd{world})\bigg)
+\]
+
 \subsection{Naive Gaussian}
 \subsubsection*{Mean Estimation}
 For a given command and world, let $ref$ be the reference from the command, $dir$ be the direction of the command, from the set $\{left, right, in\;front, behind\}$, and $distance$ be the distance specified. Then
