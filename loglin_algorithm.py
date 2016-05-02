@@ -1,5 +1,24 @@
 import numpy as np
 
+#scale factors derived from experimental data, determines relationship
+#between distance of command and variance in the direction of the command
+variance_scale = 0.43
+variance_offset = -0.6
+
+
+
+def estimate_reference_pt(ref, direction):
+	center = ref.center
+	offset = ref.width/2.*direction if direction[0] else ref.height/2.*direction
+	return center + offset
+
+#estimates the "exact" position that a command is referring to 
+def estimate_pos(cmd):
+	ref = cmd.reference
+	direction = cmd.direction
+	vector = cmd.distance*direction
+	return estimate_reference_pt(ref, direction) + vector
+
 class LoglinDistribution:
 
 	def __init__(self, command, world, w=[1, 1, 1]):
