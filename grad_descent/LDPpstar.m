@@ -30,17 +30,32 @@ end
 
 zlambda = get_zlambda(hx, lambda, Tx_all);
 expvals = get_expvals(hx, lambda, zlambda, Tx_all);
-epsilon = 0.01; % step size
+epsilon = 0.1; % step size
 
 % While L2 norm between expected value of features across all commands for
-% a given lambda and true average value is greater than accuracy,
-while (norm(expvals - theta) > accuracy)
-    disp(['Error = ' num2str(norm(expvals - theta))])
-    lambda = lambda - epsilon*(expvals - theta); % grad descent
+% a given lambda and true average value is greater than accuracy:
+prev_err = inf;
+err = norm(expvals - theta);
+disp(['Error = ' num2str(err)])
+iter = 0;
+while (err > accuracy)
+    iter = iter + 1;
+    if (iter == 10)
+        iter = 0;
+        disp(['Error = ' num2str(err)])
+    end
+    lambda = lambda - epsilon*(expvals - theta)/err; % grad descent
     zlambda = get_zlambda(hx, lambda, Tx_all); % recalculate all normalization constants
     expvals = get_expvals(hx, lambda, zlambda, Tx_all); % recalculate expected values
+    prev_err = err;
+    err = norm(expvals - theta);
+    if (err > prev_err)
+        epsilon = epsilon / 10;
+    end
 end
+disp(['Error = ' num2str(err)])
 end
+
 
 function expvals = get_expvals(hx, lambda, zlambda, Tx_all)
 % Calculates expected values for a given lambda

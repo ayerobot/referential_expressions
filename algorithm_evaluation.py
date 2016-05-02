@@ -54,8 +54,8 @@ def test_algorithms(data, commands, world, algorithms, plot=True, filename=None)
 		fig, ax = plt.subplots()
 		ind = np.arange(1, 13)
 		width = 1/float(len(probs) + 1)
-		colors = ['b', 'r', 'g', 'k', 'm']
-		algs = ['cheating', 'naive', 'objects', 'objects_walls', 'refpt']
+		colors = ['b', 'y', 'g', 'k', 'm', 'r']
+		algs = ['cheating', 'naive', 'objects', 'objects_walls', 'refpt', 'loglin']
 		for i, alg in enumerate(algs):
 			ax.bar(ind + i*width, -probs[alg], width, color=colors[i], label=alg)
 		# add some text for labels, title and axes ticks
@@ -71,6 +71,27 @@ def test_algorithms(data, commands, world, algorithms, plot=True, filename=None)
 		plt.show()
 	else:
 		return probs
+
+def calculate_logprob(data, commands, world, filename=None):
+	probs = test_algorithms(data, commands, world, algs_to_test, False, filename)
+
+	probs = {name : np.sum(probs[name]) for name in probs}
+
+	fig, ax = plt.subplots()
+	width = 1/float(len(probs))
+	algs = ['cheating', 'naive', 'objects', 'objects_walls', 'refpt', 'loglin']
+	for i, alg in enumerate(algs):
+		ax.bar(i*width, -probs[alg], width, color='b', label=alg)
+
+	ax.set_xlabel('Algorithms')
+	ax.set_ylabel('-log prob of product of data')
+	mid_points = width/2 + np.arange(len(probs))*width
+	ax.set_xticks(mid_points)
+	ax.set_xticklabels(algs)
+
+	if filename:
+		plt.savefig(filename, format='pdf')
+	plt.show()
 
 """
 Takes in result of test_algorithms. Calculates difference between each distribution and
@@ -99,6 +120,14 @@ def get_all_distributions(data, commands, world):
 def get_means(distributions):
 	return {name : np.array([distributions[name][i].mean for i in range(1, 13)]) for name in distributions}
 
+def get_error(data, means):
+	error = {name : [] for name in means}
+	for name in means:
+		for i in range(12):
+			error[name].append(np.sum((data[i + 1] - means[name][i])**2, 1))
+		error[name] = np.hstack(error[name])
+	return error
+
 def eval_means(means, data=None, commands=None, filename=None):
 	L2 = {}
 	for name in means:
@@ -109,14 +138,13 @@ def eval_means(means, data=None, commands=None, filename=None):
 	fig, ax = plt.subplots()
 	ind = np.arange(1, 13)
 	width = 1/float(len(L2) + 1)
-	colors = ['r', 'g', 'k', 'm']
-	algs = ['naive', 'objects', 'objects_walls', 'refpt']
+	colors = ['y', 'g', 'k', 'm', 'r']
 	if data and commands:
 		covs = {pt : np.cov(data[pt].T) for pt in data}
 		var_parallel = [covs[i][0, 0] if commands[i].direction[0] else covs[i][1, 1] for i in range(1, 13)]
 		stds = [np.sqrt(var) for var in var_parallel]
 		ax.scatter(ind + 2*width, stds, c='b', marker='*', label='Empirical STD')
-	for i, alg in enumerate(algs):
+	for i, alg in enumerate(algs_to_test):
 		ax.bar(ind + i*width, L2[alg], width, color=colors[i], label=alg)
 	ax.set_xlim([1, 13])
 	ymin, ymax = ax.get_ylim()
@@ -131,6 +159,31 @@ def eval_means(means, data=None, commands=None, filename=None):
 		plt.savefig(filename, format='pdf')
 	plt.show()
 	return L2
+
+def calculate_RMSE(data, commands, world, filename=None):
+	distributions = get_all_distributions(data, commands, world)
+	means = get_means(distributions)
+	error = get_error(data, means)
+	RMSE = {name : np.sqrt(np.sum(error[name]**2)) for name in error}
+	confidence_interval = {name : 2*error[name].std() for name in error}
+
+	fig, ax = plt.subplots()
+	colors = ['b', 'y', 'g', 'k', 'm', 'r']
+	width = 1/float(len(RMSE))
+	algs = ['cheating', 'naive', 'objects', 'objects_walls', 'refpt', 'loglin']
+	for i, name in enumerate(algs):
+		ax.bar(i*width, RMSE[name], width, color='b', label=name, yerr=confidence_interval[name], ecolor='r')
+	ymin, ymax = ax.get_ylim()
+	mid_points = width/2 + np.arange(len(RMSE))*width
+	ax.set_ylim([0, ymax])
+	ax.set_xticks(mid_points)
+	ax.set_xticklabels(algs)
+	ax.set_xlabel('Algorithm')
+	ax.set_ylabel('RMSE')
+	if filename:
+		plt.savefig(filename, format='pdf')
+	plt.show()
+	return RMSE
 
 
 
@@ -157,6 +210,12 @@ if __name__ == '__main__':
 			L2 = eval_means(means, data, commands, filename=sys.argv[4])
 		else:
 			L2 = eval_means(means, data, commands)
+	elif len(sys.argv) > 2 and (sys.argv[2] == 'RMSE' or sys.argv[2] == 'rmse'):
+		if len(sys.argv) > 3 and sys.argv[3] == 'save':
+			print "Saved"
+			RMSE = calculate_RMSE(data, commands, world, filename=sys.argv[4])
+		else:
+			RMSE = calculate_RMSE(data, commands, world)
 	else:
 		if len(sys.argv) > 2 and sys.argv[2] == 'save':
 			print "Saved"
