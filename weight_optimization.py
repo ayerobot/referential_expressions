@@ -1,8 +1,13 @@
+#!/usr/bin/env python2
+import sys
+
 import numpy as np
 import scipy.io as sio
 
+from data_utils import *
+from world_objects import *
 from reference_algorithms import *
-from loglin_algorithm import get_feature_matrix
+from loglin_algorithm import *
 
 """
 Performs a gridsearch over three weights for loglin algorithm.
@@ -53,6 +58,14 @@ folder.
 def generate_feature_vectors(data, commands, world):
 	x, y = np.mgrid[0:world.xdim:.1, 0:world.ydim:.1]
 	for i in range(1, 13):
-		Tx = get_feature_matrix(x, y, commands[i], world)
-		theta = np.mean(get_feature_matrix(data[i][:,0], data[i][:,1], commands[i], world), 0)
+		Tx = get_feature_matrix(x, y, commands[i], world, all_features)
+		theta = np.mean(get_feature_matrix(data[i][:,0], data[i][:,1], commands[i], world, all_features), 0)
 		sio.savemat('grad_descent/command' + str(i) + '.mat', {'Tx' : Tx, 'theta' : theta})
+
+if __name__ == '__main__':
+	scene_num = sys.argv[1]
+	data = load_pickle_data('data/scene_' + scene_num + '_images_annotated_preprocessed.dat')
+	scene_num = int(scene_num)
+	commands = all_commands[scene_num]
+	world = all_worlds[scene_num]
+	generate_feature_vectors(data, commands, world)

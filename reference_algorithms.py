@@ -10,18 +10,17 @@ variance_offset = -0.6
 #TODO: create generalized "result object"
 #all results from algorithm functions will return a function that has a .pdf method
 
-
-def estimate_reference_pt(ref, direction):
-	center = ref.center
-	offset = ref.width/2.*direction if direction[0] else ref.height/2.*direction
-	return center + offset
-
 #estimates the "exact" position that a command is referring to 
 def estimate_pos(cmd):
 	ref = cmd.reference
 	direction = cmd.direction
 	vector = cmd.distance*direction
 	return estimate_reference_pt(ref, direction) + vector
+
+def estimate_reference_pt(ref, direction):
+	center = ref.center
+	offset = ref.width/2.*direction if direction[0] else ref.height/2.*direction
+	return center + offset
 
 # takes in training data set for a given command and returns a numpy.multivariate_norm distribution
 # with the sample mean and covariance
@@ -165,11 +164,8 @@ def ow_refpt_algorithm(cmd, world, k1=4.8, k2=3.9):
 
 	return mv_dist
 
-def loglin_alg(cmd, world, w=[0.8494, 0.3951, 0.0111]): # w = [0.57, 0.19, 0.24]
-	return LoglinDistribution(cmd, world, w)
-
-
-
+def loglin_alg(cmd, world): # w = [0.57, 0.19, 0.24]
+	return LoglinDistribution(cmd, world)
 
 #convenience function, for a 2d vector of x y points returns a vector of corresponding feature vectors
 def feat_vals_vec(points, cmd, world):

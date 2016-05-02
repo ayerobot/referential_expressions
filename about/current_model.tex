@@ -14,7 +14,9 @@
 \section*{Current Model:}
 
 \subsection{Goal}
-Estimate a function of the form:
+When given a command such as `five inches to the right of the bowl', some knowledge of the world (size of world, objects in world), output a distribution over space corresponding to the probability that the user was referring to each point.
+
+We believe this function will be of the form:
 \[
 f(x, y, \textmd{command}, \textmd{world}) = \frac{1}{z(\lambda, \textmd{command}, \textmd{world})}\exp\bigg(\sum_{i = 1}^c \lambda_iT_i(x, y, \textmd{command}, \textmd{world})\bigg)
 \]
