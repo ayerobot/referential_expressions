@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.stats import multivariate_normal, expon
-from loglin_algorithms import LoglinDistribution
+from loglin_algorithm import LoglinDistribution
 
 #scale factors derived from experimental data, determines relationship
 #between distance of command and variance in the direction of the command
