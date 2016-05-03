@@ -24,7 +24,7 @@ if (~exist('lambda', 'var') || length(lambda) ~= num_features)
     lambda = zeros(size(Tx_all{1}, 2), 1);
 end
 
-accuracy = 0.001*norm(all_theta);
+accuracy = 0.01*norm(all_theta);
 disp(['accuracy = ' num2str(accuracy)])
 
 lambda = LDPpstar(hx, Tx_all, all_theta, accuracy, lambda);

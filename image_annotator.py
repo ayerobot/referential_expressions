@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 #determines x/y pixel coordinates of points on the image using matplotlib and handler
+import os
+import sys
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from matplotlib.widgets import Button
-import os
-import sys
 
 x_len = 48 #inches
 y_len = 36 #inches
