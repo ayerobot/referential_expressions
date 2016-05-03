@@ -1,5 +1,8 @@
 import numpy as np
 
+
+class LoglinDistribution:
+
 variance_scale = 0.43
 variance_offset = -0.6
 
