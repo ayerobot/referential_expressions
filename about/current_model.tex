@@ -14,6 +14,10 @@
 \section*{Current Model:}
 
 \subsection{Goal}
+Let $\gamma$ be a command, e.g. `five inches to the right of the bowl'. Each command can be parsed into the following tuple $\gamma = (d, \theta, \lambda)$ where $d$ is the distance (e.g. 5), $\theta$ is the direction (e.g. right) and $\lambda$ is the reference object (e.g. bowl). \\
+\\
+Let $\Lambda$ be the world, which consists of a series of reference objects $\lambda_1, \lambda_2, \ldots, \lambda_n$ and 
+
 When given a command such as `five inches to the right of the bowl', some knowledge of the world (size of world, objects in world), output a distribution over space corresponding to the probability that the user was referring to each point.
 
 We believe this function will be of the form:
