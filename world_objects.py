@@ -38,6 +38,8 @@ class Reference:
 			self.width = self.position[:,0].ptp()
 			self.height = self.position[:,1].ptp()
 			self.patch = Polygon(self.position, True)
+			#each element is a list of reference points and vectors
+			#self.refpts = {"right of ": [(np.array([13.53, 7.93]), np.array([23.9, 0])), (np.array([17.47, 11.96]), np.array([23.9, 0])), (np.array([15.31, 13.70]), np.array([24, 18.51]))], "left of":, "in front of", "behind"}
 
 class World:
 	#dimensions in inches

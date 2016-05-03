@@ -6,6 +6,7 @@ variance_offset = -0.6
 
 squared_weights = [0.0826, 1.9146, 0.1485, 0.3326]
 squared_weights2 = [6.0255, 1.9138, 0.0696, 0.0354]
+squared_weights3 = [0.1956, 0.0682, -0.0543, 0.1199]
 non_squared_weights = [0.8521, 2.4242, 0.2660, 0.3044]
 both_weights = [-0.0090, 1.9832, 0.9130, 0.0045, 0.2678, 0.2787]
 
@@ -13,7 +14,7 @@ sig_weights = [0.0855, 2.1579, 1, 0.1688, 0.3494]
 
 class LoglinDistribution:
 	# [0.0826, 1.9146, 0.1485, 0.3326]
-	def __init__(self, command, direction, refpt, world, w=squared_weights):
+	def __init__(self, command, direction, refpt, world, w=squared_weights2):
 		self.command = command
 		self.world = world
 		self.features = all_features
@@ -124,7 +125,7 @@ def feature_parallel_squared(x, y, cmd, direction, refpt, world, ref_dists):
 	#just in case the direction isn't normalized
 	direction_hat = direction/np.linalg.norm(direction)
 
-	return -(x_diff*direction_hat[0] + y_diff*direction_hat[1])**2
+	return -(x_diff*direction_hat[0] + y_diff*direction_hat[1])**2/cmd.distance**2
 
 def feature_parallel(x, y, cmd, world, ref_dists):
 	mean = estimate_pos(cmd)
