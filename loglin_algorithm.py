@@ -3,13 +3,13 @@ import numpy as np
 squared_weights = [6.0255, 1.9138, 0.0696, 0.0354]
 
 class LoglinDistribution:
-	def __init__(self, command, direction, refpt, world, w=squared_weights):
+	def __init__(self, command, world, w=squared_weights, direction=None, refpt=None):
 		self.command = command
 		self.world = world
 		self.features = all_features
 		#these two features added for debugging, will be more explicit later
-		self.refpt = refpt
-		self.direction = direction
+		self.direction = direction if direction else command.direction
+		self.refpt = refpt if refpt else estimate_pos(command)
 
 		x, y = np.mgrid[0:self.world.xdim:.1, 0:self.world.ydim:.1]
 
@@ -48,10 +48,9 @@ class MultiPeakLoglin:
 		self.refpts = refpts
 		self.probs = probs
 
-		self.distributions = [LoglinDistribution(command, direction, refpt, world) for direction, refpt in zip(self.directions, self.refpts)]
+		self.distributions = [LoglinDistribution(command, world, direction=direction, refpt=refpt) for direction, refpt in zip(self.directions, self.refpts)]
 
 	def pdf(self, pts, normalize=False):
-
 		print zip(self.distributions, self.probs)
 		vals_stacked = np.array([distribution.pdf(pts)*prob for distribution, prob in zip(self.distributions, self.probs)])
 
@@ -84,27 +83,14 @@ def get_ref_dists(x, y, world):
 
 #modified to allow for different direction vectors
 def feature_parallel_squared(x, y, cmd, direction, refpt, world, ref_dists):
-	mean = estimate_pos(cmd)
-	if cmd.direction[0]:
-		return -(x - mean[0])**2/cmd.distance**2
-	else:
-		return -(y - mean[1])**2/cmd.distance**2
-
 	x_diff = x - refpt[0]
 	y_diff = y - refpt[1]
 
-	#just in case the direction isn't normalized
 	direction_hat = direction/np.linalg.norm(direction)
 
-	return -(x_diff*direction_hat[0] + y_diff*direction_hat[1])**2
+	return -(x_diff*direction_hat[0] + y_diff*direction_hat[1])**2/cmd.distance**2
 
 def feature_ortho_squared(x, y, cmd, direction, refpt, world, ref_dists):
-	# mean = estimate_pos(cmd)
-	# if cmd.direction[0]:
-	# 	return -(y - mean[1])**2
-	# else:
-	# 	return -(x - mean[0])**2
-
 	x_diff = x - refpt[0]
 	y_diff = y - refpt[1]
 
