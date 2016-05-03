@@ -4,7 +4,7 @@ variance_scale = 0.43
 variance_offset = -0.6
 
 squared_weights = [0.0826, 1.9146, 0.1485, 0.3326]
-squared_weights2 = [0.0856, 0.4055, -0.0051, 0.0237]
+squared_weights2 = [6.0255, 1.9138, 0.0696, 0.0354]
 non_squared_weights = [0.8521, 2.4242, 0.2660, 0.3044]
 both_weights = [-0.0090, 1.9832, 0.9130, 0.0045, 0.2678, 0.2787]
 
@@ -23,27 +23,25 @@ class LoglinDistribution:
 
 		self.set_weights(w)
 
-	def pdf(self, pts, normalize=False):
-		if pts.ndim == 3:
-			x = pts[:,:,0]
-			y = pts[:,:,1]
-		elif pts.ndim == 2:
-			x = pts[:,0]
-			y = pts[:,1]
+	def pdf(self, pts, normalize=True):
+		xslice = [slice(None)]*(pts.ndim - 1) + [0]
+		yslice = [slice(None)]*(pts.ndim - 1) + [1]
+		x = pts[xslice]
+		y = pts[yslice]
 		ref_dists = get_ref_dists(x, y, self.world)
 
 		features = np.array([w*f(x, y, self.command, self.world, ref_dists) for f, w in zip(self.features, self.w)])
 		vals = np.exp(np.sum(features, axis=0))
 
 		if normalize:
-			vals = vals/self.normalization
-		return vals
+			vals = vals/self.normalization*100
+		return vals if vals.size > 1 else vals[0]
 
 	def set_weights(self, w):
 		self.w = np.array(w)
 		self.normalization = np.sum(np.exp(self.feature_matrix*np.matrix(self.w).T))
 		x, y = np.mgrid[0:self.world.xdim:.1, 0:self.world.ydim:.1]
-		prob = self.pdf(np.dstack((x, y)), normalize=True)
+		prob = self.pdf(np.dstack((x, y)), normalize=True)/100
 		self.mean = np.array([np.sum(x*prob), np.sum(y*prob)])
 
 def estimate_reference_pt(ref, direction):
@@ -62,7 +60,7 @@ def get_ref_dists(x, y, world):
 	for ref in world.references:
 		directions = np.array([[1, 0], [-1, 0], [0, 1], [0, -1]])
 		ref_pts = np.array([estimate_reference_pt(ref, direction) for direction in directions])
-		possible_dists = np.dstack((x - pt[0])**2 + (y - pt[1])**2 for pt in ref_pts)
+		possible_dists = np.dstack(np.sqrt((x - pt[0])**2 + (y - pt[1])**2) for pt in ref_pts)
 		ref_dists[ref] = np.min(possible_dists, axis=2)
 	return ref_dists
 
@@ -82,9 +80,9 @@ def feature_naive(x, y, cmd, world, ref_dists):
 def feature_parallel_squared(x, y, cmd, world, ref_dists):
 	mean = estimate_pos(cmd)
 	if cmd.direction[0]:
-		return -(x - mean[0])**2
+		return -(x - mean[0])**2/cmd.distance**2
 	else:
-		return -(y - mean[1])**2
+		return -(y - mean[1])**2/cmd.distance**2
 
 def feature_parallel(x, y, cmd, world, ref_dists):
 	mean = estimate_pos(cmd)
