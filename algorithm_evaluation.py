@@ -4,9 +4,9 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
+from utils import data_utils
+from utils.world_objects import *
 from reference_algorithms import *
-from world_objects import *
-import pickle
 
 algs_to_test = {'naive' : naive_algorithm, 
 				'objects' : objects_algorithm, 
@@ -200,8 +200,7 @@ if __name__ == '__main__':
 	else:
 		print "need scene number"
 		sys.exit(1)
-	with open(datafile) as dat:
-		data = pickle.load(dat)
+	data = data_utils.load_pickle_data(datafile)
 	if len(sys.argv) > 2 and sys.argv[2] == 'means':
 		distributions = get_all_distributions(data, commands, world)
 		means = get_means(distributions)

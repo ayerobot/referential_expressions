@@ -7,12 +7,11 @@ from matplotlib.collections import PatchCollection
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from scipy.stats import multivariate_normal
-import pickle
 
-from world_objects import *
+from utils import data_utils
+from utils.world_objects import *
 from reference_algorithms import *
 from algorithm_evaluation import algs_to_test
-from data_utils import *
 
 
 """
@@ -162,8 +161,7 @@ if __name__ == '__main__':
 	else:
 		print "need scene number"
 		sys.exit(1)
-	with open(datafile) as dat:
-		data = pickle.load(dat)
+	data = data_utils.load_pickle_data(datafile)
 	if len(sys.argv) > 2 and sys.argv[2] != 'save':
 		if len(sys.argv) > 3 and sys.argv[3] == 'save':
 			print "Saved"

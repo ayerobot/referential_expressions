@@ -4,8 +4,8 @@ import sys
 import numpy as np
 import scipy.io as sio
 
-from data_utils import *
-from world_objects import *
+from utils.data_utils import *
+from utils.world_objects import *
 from reference_algorithms import *
 from loglin_algorithm import *
 
