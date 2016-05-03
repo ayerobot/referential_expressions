@@ -1,11 +1,5 @@
 import numpy as np
 
-
-class LoglinDistribution:
-
-variance_scale = 0.43
-variance_offset = -0.6
-
 squared_weights = [0.0826, 1.9146, 0.1485, 0.3326]
 squared_weights2 = [6.0255, 1.9138, 0.0696, 0.0354]
 non_squared_weights = [0.8521, 2.4242, 0.2660, 0.3044]
