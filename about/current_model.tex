@@ -21,28 +21,30 @@
 \section*{Introduction}
 Let $\Gamma$ represent the knowledge of the table. $\Gamma$ is composed of $\gamma_1, \ldots, \gamma_n$, corresponding to the objects on the table, and $\gamma_{\textmd{wall}_1}, \gamma_{\textmd{wall}_2}, \gamma_{\textmd{wall}_3}, \gamma_{\textmd{wall}_4}$, corresponding to the four walls (edges) of the table. Each $\gamma$ contains position and dimension information about the object in question.   \\
 \\
-Let $\lambda$ be the command the user gives, consisting of a distance $\lambda_d$ a direction (relation) $\lambda_r$ and a reference object $\lambda_f$. For the sake of testing this algorithm, we will assume perfect ability to parse the command and extract this information.Therefore we assume there is a perfect correspondence between $\lambda_f$ and $\gamma_\refobj$, where $\gamma_\refobj \in \{\gamma_1, \ldots, \gamma_n\}$. In addition, we assume that the direction is in the set $\{$left, right, in front, behind$\}$ and map $\lambda_r$ to the corresponding direction vectors $\{[1, 0], [-1, 0], [0, 1], [0, -1]\}$  Underlying this assumption is the larger assumption that all commands map to a single direction vector - discussion of how we plan to improve this can be found later in this paper. \\
+Let $\lambda$ be the command the user gives, consisting of a distance $\lambda_d$ a direction (relation) $\lambda_r$ and a reference object $\lambda_f$. For the sake of testing this algorithm, we will assume perfect ability to parse the command and extract this information. Therefore we assume there is a perfect correspondence between $\lambda_f$ and $\gamma_\refobj$, where $\gamma_\refobj \in \{\gamma_1, \ldots, \gamma_n\}$. In addition, we assume that the direction is in the set $\{$left, right, in front, behind$\}$ and map $\lambda_r$ to the corresponding direction vectors $\{[1, 0], [-1, 0], [0, 1], [0, -1]\}$.  Underlying this assumption is the larger assumption that all commands map to a single direction vector - discussion of how we plan to improve this can be found later in this paper. We assume that the distance $\lambda_d$ of a command is independent of the direction $\lambda_r$. Finally, we only deal with two dimensions, so don't consider commands that involve the $z$-axis. \\
 \\
 As an example, if the command is `five inches to the right of the bowl', then we have $\lambda_d = 5$, $\lambda_r = [1, 0]$, $\lambda_f = $ the bowl. \\
 \\
 Our goal then is to estimate a function $\mathbb{P}(x, y | \lambda, \Gamma)$ which gives the probability that a user was referring to the point $(x, y)$ given the command $\lambda$ and world $\Gamma$. \\
 \\
-From the command and reference, we calculate a naive mean, which is the point you would select if you went exactly the distance specified by the command, in the direction specified by the command. From this we calculate four features for a log-linear model.
-
-
+From the command and reference, we calculate a naive mean, which is the point you would select if you went exactly the distance specified by the command, in the direction specified by the command. From this we calculate four features for a log-linear model. 
 
 \section*{Feature Calculation}
-\subsection{Calculating $\hat{\mu}$}
+\subsection*{Calculating $\hat{\mu}$}
 The naive mean, $\hat{\mu}$, is what is obtained by going exactly the distance specified in the command from the edge of the object. This is calculated as follows:
 \[
-\hat{\mu} = \begin{cases} \gamma_\refobj.center + \frac{\gamma_\refobj.height}{2} + \lambda_d, & \lambda_r = [0, -1] \\
-\gamma_\refobj.center - \frac{\gamma_\refobj.height}{2} - \lambda_d, & \lambda_r = [0, 1] \\
- \gamma_\refobj.center + \frac{\gamma_\refobj.width}{2} + \lambda_d, & \lambda_r = [1, 0] \\
- \gamma_\refobj.center - \frac{\gamma_\refobj.width}{2} - \lambda_d, & \lambda_r = [-1, 0] \end{cases}
+\hat{\mu} = \begin{cases} 
+\gamma_\refobj.center + \frac{1}{2}\gamma_\refobj.height + \lambda_d, & \lambda_r = [0, -1] \\
+\gamma_\refobj.center - \frac{1}{2}\gamma_\refobj.height - \lambda_d, & \lambda_r = [0, 1] \\
+\gamma_\refobj.center + \frac{1}{2}\gamma_\refobj.width + \lambda_d, & \lambda_r = [1, 0] \\
+\gamma_\refobj.center - \frac{1}{2}\gamma_\refobj.width - \lambda_d, & \lambda_r = [-1, 0] 
+\end{cases}
 \]
 
 \subsection*{Calculating $T_1$ and $T_2$}
-Here, we use three assumptions about the data. First, that the data are distributed in a gaussian manner. Second, that the variance in the direction of the command (i.e. in the $x$ direction for `left' or `right' and the $y$ direction for `in front' and `behind') is independent of the variance in the orthogonal direction. Third, that variance in the direction of the command scales linearly with the distance of the command, while variance in the orthogonal direction is constant. \\
+$T_1$ and $T_2$ create a gaussian-like distribution around the naive mean $\hat{\mu}$. $T_1$ penalizes points based on squared distance from $\hat{\mu}$ \emph{in the direction of the command} (e.g. if the direction is `left', then $T_1$ penalizes points based on squared distance from $\hat{\mu}$ in the $x$-axis). In addition, $T_1$ penalizes less if the command was long (e.g. 1 foot) than if it was short (e.g. 1 inch). $T_2$ penalizes points based on squared distance from $\hat{\mu}$ in the orthogonal direction (e.g. if the direction is `left', then $T_2$ penalizes points based on squared distance from $\hat{\mu}$ in the $y$-axis). \\
+\\
+To arrive at these features, we make three assumptions about the data. First, that the data are distributed in a gaussian manner. Second, that the variance in the direction of the command (i.e. in the $x$ direction for `left' or `right' and the $y$ direction for `in front' and `behind') is independent of the variance in the orthogonal direction. Third, that variance in the direction of the command scales linearly with the distance of the command, while variance in the orthogonal direction is constant. \\
 \\
 From this, our goal is to generate features that tell us about the probability of a point $(x, y)$ given $\lambda, \Gamma$. Let $v = (x, y) - \hat{\mu}$. A gaussian version of this probability incorporating the above assumptions would be:
 \[
@@ -69,7 +71,8 @@ $T_4$ is a hinge loss, designed to penalize points that are closer to a wall tha
 T_4(x, y|\lambda, \Gamma) = \max\Big(0, ||(x, y) - p_{(x, y), \gamma_{\refobj}}|| - \min_{\gamma_{\textmd{wall}_i} \in \Gamma} ||(x, y) - p_{(x, y), \gamma_{\textmd{wall}_i}}||\Big)
 \]
 
-All the terms so far described are related to each other via the following graphical model:\indent\vspace{-10pt}
+\section*{Putting the Model Together}
+All the features described above are related to each other via the following graphical model:\indent\vspace{-10pt}
 \begin{center}
 \begin{tikzpicture}[-, >=stealth', shorten >=1pt, auto, node distance=2cm, every state/.style={fill=white, draw=black, text=black, minimum size=0.5cm}]
 	\node[state, label=above:$\lambda$] (cmd) {};
@@ -121,7 +124,6 @@ All the terms so far described are related to each other via the following graph
 \end{tikzpicture}
 \end{center}
 
-\section*{Putting the Model Together}
 Given these features, we obtain the log-linear model
 \[
 \mathbb{P}_w(x, y|\lambda, \Gamma) = \frac{1}{z_w(\lambda, \Gamma)}\exp\bigg(\sum_{c = 1}^4w_cT_c(x, y|\lambda, \Gamma)\bigg)
