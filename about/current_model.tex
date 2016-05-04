@@ -13,6 +13,9 @@
 \setlength{\parskip}{0.05in}
 
 \newcommand\refobj{\textmd{ref}}
+\newcommand\prob{\mathbb{P}}
+\newcommand\E{\mathbb{E}}
+\DeclareMathOperator*{\argmin}{\arg\!\min}
 
 \begin{document}
 \section*{Introduction}
@@ -103,13 +106,48 @@ T_2(x, y | \lambda, \Gamma) &= [v - \langle v, \lambda_r \rangle\lambda_r]^2 \\
 with $v = (x, y) - \hat{\mu}$ as before.
 
 \subsection{Calculating $T_3$}
-****** TBD ********
+$T_3$ is a hinge loss, designed to penalize points that are closer to an object other than the reference object (the one used in the command). The value should be zero for points where the reference object is the closest object, and increase linearly as $(x, y)$ get closer to some other object. Let $p_{(x, y), \gamma_i}$ be the point on $\gamma_i$ closest to $(x, y)$. Then,
+\[
+T_3(x, y|\lambda, \Gamma) = ||(x, y) - p_{(x, y), \gamma_{\refobj}}|| - \min_{\gamma_i \in \Gamma} ||(x, y) - p_{(x, y), \gamma_i}||
+\]
 
 \subsection{Calculating $T_4$}
-
+$T_4$ is a hinge loss, designed to penalize points that are closer to a wall than to the reference object. The value should be zero for points where the reference object is closer than any wall, and increase linearly as $(x, y)$ get closer to some other object. Let $p_{(x, y), \gamma_i}$ be the point on $\gamma_i$ closest to $(x, y)$. Then,
+\[
+T_4(x, y|\lambda, \Gamma) = \max\Big(0, ||(x, y) - p_{(x, y), \gamma_{\refobj}}|| - \min_{\gamma_{\textmd{wall}_i} \in \Gamma} ||(x, y) - p_{(x, y), \gamma_{\textmd{wall}_i}}||\Big)
+\]
 \subsection{Putting it Together}
+Given these features, we obtain the log-linear model
+\[
+\mathbb{P}_w(x, y|\lambda, \Gamma) = \frac{1}{z_w(\lambda, \Gamma)}\exp\bigg(\sum_{c = 1}^4w_cT_c(x, y|\lambda, \Gamma)\bigg)
+\]
+where $w$ is a vector of weights. We then learn the weights using MLE estimation.
 
 \subsection{MLE Estimation for Learning Weights}
+We trained the model using the data from scene \#1. We assume each data point is an iid sample from $\prob_w(x, y|\lambda, \Gamma)$. Let the 12 commands be specified by $\lambda^{(1)}, \ldots, \lambda^{(12)}$. For each command we collected 10 data points. Let $X$ represent all the data and let $X^{(i)}_j$ be the $j$-th data point for the $i$-th command. Then the joint probability of the data points can be expressed as
+
+\begin{equation*}
+\begin{split}
+\prob_w(X|\lambda^{(1)}, \ldots, \lambda^{(12)}, \Gamma) &= \prod_{i = 1}^{12}\prod_{j = 1}^{10} \frac{1}{z_w(\lambda^{(i)}, \Gamma)}\exp\bigg(\sum_{c = 1}^4w_cT_c(X^{(i)}_j|\lambda^{(i)}, \Gamma)\bigg) \\
+&= \bigg(\prod_{i = 1}^{12}\prod_{j = 1}^{10} \frac{1}{z_w(\lambda^{(i)}, \Gamma)}\bigg)\bigg(\prod_{i = 1}^{12}\prod_{j = 1}^{10}\exp\bigg(\sum_{c = 1}^4w_cT_c(X^{(i)}_j|\lambda^{(i)}, \Gamma)\bigg)\bigg) \\
+&= \bigg(\prod_{i = 1}^{12}\prod_{j = 1}^{10} \frac{1}{z_w(\lambda^{(i)}, \Gamma)}\bigg)\exp\bigg(\sum_{c = 1}^4w_c\sum_{i = 1}^{12}\sum_{j = 1}^{10}T_c(X^{(i)}_j|\lambda^{(i)}, \Gamma)\bigg)
+\end{split}
+\end{equation*}
+
+Our goal then is to find the argmax over $w$ of this function. This is the same as finding the argmin of the negative log, so we have
+\begin{equation*}
+\begin{split}
+w^* &= \argmin_w -\log\prob_w(X|\lambda^{(1)}, \ldots, \lambda^{(12)}, \Gamma) \\
+&= \argmin_w \sum_{i = 1}^{12}\sum_{j = 1}^{10}\log(z_w(\lambda^{(i)}, \Gamma)) - \sum_{c = 1}^4w_c\sum_{i = 1}^{12}\sum_{j = 1}^{10}T_c(X^{(i)}_j|\lambda^{(i)}, \Gamma)
+\end{split}
+\end{equation*}
+
+This is the sum of exponential families, one for each $i, j$. Therefore the derivative with respect to $w_c$ of the log partition function is the expected value of the $c$-th feature. Therefore, 
+\[
+\frac{\partial}{\partial w_c} -\log\prob_w(X|\lambda^{(1)}, \ldots, \lambda^{(12)}, \Gamma) = \sum_{i = 1}^{12}\sum_{j = 1}^{10} \E_w[T_c(x, y|\lambda^{(i)}, \Gamma)] - \sum_{i = 1}^{12}\sum_{j = 1}^{10}T_c(X^{(i)}_j|\lambda^{(i)}, \Gamma)
+\]
+
+We use this to perform gradient descent. In order to calculate the probabilities and the partition function, we discretize the table with a grid of step size 0.1 inches. Once we do this, we have all the components necessary to calculate the gradient, and so we perform gradient descent until the gradient falls below a threshold level.
 
 \section*{OLD STUFF}
 
