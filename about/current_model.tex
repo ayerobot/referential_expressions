@@ -4,47 +4,114 @@
 \usepackage{lastpage}
 \usepackage{enumerate}
 \usepackage{fancyhdr}
+\usepackage{tikz}
+\usetikzlibrary{arrows, automata}
 \usepackage{mathrsfs}
 \usepackage{dsfont}
 \usepackage[margin=3cm]{geometry}
 \setlength{\parindent}{0.0in}
 \setlength{\parskip}{0.05in}
 
+\newcommand\refobj{\textmd{ref}}
+
 \begin{document}
-\section*{Current Model:}
-
-\subsection{Goal}
-Let $\gamma$ be a command, e.g. `five inches to the right of the bowl'. Each command can be parsed into the following tuple $\gamma = (d, \theta, \lambda)$ where $d$ is the distance (e.g. 5), $\theta$ is the direction (e.g. right) and $\lambda$ is the reference object (e.g. bowl). \\
+\section*{Introduction}
+Let $\Gamma$ represent the knowledge of the table. $\Gamma$ is composed of $\gamma_1, \ldots, \gamma_n$ corresponding to the objects on the table and $\gamma_{\textmd{wall}_1}, \gamma_{\textmd{wall}_2}, \gamma_{\textmd{wall}_3}, \gamma_{\textmd{wall}_4}$ corresponding to the four walls (edges) of the table. \\
 \\
-Let $\Lambda$ be the world, which consists of a series of reference objects $\lambda_1, \lambda_2, \ldots, \lambda_n$ and 
+Let $\lambda$ be the command the user gives, consisting of a distance $\lambda_d$ a direction (relation) $\lambda_r$ and a reference object $\lambda_f$. For the sake of testing this algorithm, we will assume perfect ability to parse the command. Therefore we assume there is a perfect correspondence between $\lambda_f$ and $\gamma_\refobj$, where $\gamma_\refobj \in \{\gamma_1, \ldots, \gamma_n\}$. In addition, for the model not including rotation, we assume that the direction is in the set $\{$left, right, in front, behind$\}$ and map $\lambda_r$ to the corresponding direction vectors $\{[1, 0], [-1, 0], [0, 1], [0, -1]\}$\\
+\\
+As an example, if the command is `five inches to the right of the bowl', then we have $\lambda_d = 5$, $\lambda_r = [1, 0]$, $\lambda_f = $ the bowl. \\
+\\
+Our goal then is to estimate a function $\mathbb{P}(x, y | \lambda, \Gamma)$ which gives the probability that a user was referring to the point $(x, y)$ given the command $\lambda$ and world $\Gamma$. \\
+\\
+From the command and reference, we calculate a naive mean, which is the point you would select if you went exactly the distance specified by the command. From this we calculate four features for a log-linear model. The four features are explained below. All the terms so far described are related to each other via the following graphical model:\indent\vspace{-10pt}
+\begin{center}
+\begin{tikzpicture}[-, >=stealth', shorten >=1pt, auto, node distance=2cm, every state/.style={fill=white, draw=black, text=black, minimum size=0.5cm}]
+	\node[state, label=above:$\lambda$] (cmd) {};
+	\node[state, label=above:$\Gamma$] (world) [right of=cmd, xshift=4cm] {};
+	\node[state, label=left:$\lambda_d$] (dist) [below of=cmd] {};
+	\node[state, label=left:$\lambda_r$] (dir) [left of=dist] {};
+	\node[state, label=above:$\lambda_f/\gamma_{\refobj}$] (ref) [right of=dist] {};
+	\node[state, label=left:$\gamma_1$] (obj1) [below of=world, xshift=-2cm] {};
+	\node[state, label=above left:$\gamma_n$] (objn) [right of=obj1] {};
+	\node[state, label=left:$\gamma_{\textmd{wall}_1}$] (wall1) [right of=objn] {};
+	\node[state, label=right:$\gamma_{\textmd{wall}_4}$] (wall4) [right of=wall1] {};
+	\node[state, label=right:$\hat{\mu}$] (mu) [below of=dist] {};
+	\node[state, label=left:$T_1$] (t1) [below of=mu, xshift=-1cm] {};
+	\node[state, label=right:$T_2$] (t2) [right of=t1] {};
+	\node[state, label=left:$T_3$] (t3) [right of=t2, xshift=2cm] {};
+	\node[state, label=right:$T_4$] (t4) [right of=t3] {};
+	\node[state, label=below:${(x, y)}$] (pt) [below of=t2, xshift=2cm] {};
+	
+	\path (cmd) edge (dist)
+	         (cmd) edge (dir)
+	         (cmd) edge (ref)
+	         (world) edge (ref)
+	         (world) edge (obj1)
+	         (world) edge (objn)
+	         (world) edge (wall1)
+	         (world) edge (wall4)
+	         (obj1) -- node[auto=false]{\ldots} (objn)
+	         (wall1) -- node[auto=false]{\ldots} (wall4)
+	         (dir) edge (mu)
+	         (dist) edge (mu)
+	         (ref) edge (mu)
+	         (dir) edge (t1)
+	         (dir) edge (t2)
+	         (dist) edge (t1)
+	         (mu) edge (t1)
+	         (mu) edge (t2)
+	         (ref) edge (t3)
+	         (ref) edge (t4)
+	         (obj1) edge (t3)
+	         (objn) edge (t3)
+	         (wall1) edge (t4)
+	         (wall4) edge (t4)
+	         (t1) edge (pt)
+	         (t2) edge (pt)
+	         (t3) edge (pt)
+	         (t4) edge (pt);
 
-When given a command such as `five inches to the right of the bowl', some knowledge of the world (size of world, objects in world), output a distribution over space corresponding to the probability that the user was referring to each point.
 
-We believe this function will be of the form:
+\end{tikzpicture}
+\end{center}
+
+\section*{Feature Calculation}
+\subsection{Calculating $\hat{\mu}$}
+The naive mean, $\hat{\mu}$, is what is obtained by going exactly the distance specified in the command from the edge of the object. This is calculated as follows:
 \[
-f(x, y, \textmd{command}, \textmd{world}) = \frac{1}{z(\lambda, \textmd{command}, \textmd{world})}\exp\bigg(\sum_{i = 1}^c \lambda_iT_i(x, y, \textmd{command}, \textmd{world})\bigg)
+\hat{\mu} = \begin{cases} \gamma_\refobj.center + \frac{\gamma_\refobj.height}{2} + \lambda_d, & \lambda_r = [0, -1] \\
+\gamma_\refobj.center - \frac{\gamma_\refobj.height}{2} - \lambda_d, & \lambda_r = [0, 1] \\
+ \gamma_\refobj.center + \frac{\gamma_\refobj.width}{2} + \lambda_d, & \lambda_r = [1, 0] \\
+ \gamma_\refobj.center - \frac{\gamma_\refobj.width}{2} - \lambda_d, & \lambda_r = [-1, 0] \end{cases}
 \]
 
-\subsection{Naive Gaussian}
-\subsubsection*{Mean Estimation}
-For a given command and world, let $ref$ be the reference from the command, $dir$ be the direction of the command, from the set $\{left, right, in\;front, behind\}$, and $distance$ be the distance specified. Then
+\subsection{Calculating $T_1$ and $T_2$}
+We use three assumptions about the data here. First, that the data are distributed in a gaussian manner. Second, that the variance in the direction of the command (i.e. in the $x$ direction for `left' or `right' and the $y$ direction for `in front' and `behind') is independent of the variance in the orthogonal direction. Third, that variance in the direction of the command scales linearly with the distance of the command, while variance in the orthogonal direction is constant. \\
+\\
+From this, our goal is to generate features that tell us about the probability of a point $(x, y)$ given $\lambda, \Gamma$. Let $v = (x, y) - \hat{\mu}$. A gaussian version of this probability incorporating the above assumptions would be:
 \[
-\hat{x}, \hat{y} = \begin{cases} ref.center + \frac{ref.height}{2} + distance, & dir = behind \\
-ref.center - \frac{ref.height}{2} - distance, & dir = in\;front \\
- ref.center + \frac{ref.width}{2} + distance, & dir = right \\
- ref.center - \frac{ref.width}{2} - distance, & dir = left \end{cases}
+\frac{1}{Z}\exp\bigg(\frac{\langle v, \lambda_r\rangle^2}{k_1 \lambda_d}\bigg)\exp\bigg(\frac{[v - \langle v, \lambda_r\rangle\lambda_r]^2}{k_2}\bigg)
 \]
+Turning these into features in a log-linear distribution, we then get:
+\begin{equation*}
+\begin{split}
+T_1(x, y | \lambda, \Gamma) &= \frac{1}{\lambda_d} \langle v, \lambda_r \rangle^2 \\
+T_2(x, y | \lambda, \Gamma) &= [v - \langle v, \lambda_r \rangle\lambda_r]^2 \\
+\end{split}
+\end{equation*}
+with $v = (x, y) - \hat{\mu}$ as before.
 
-\subsubsection*{Covariance Estimation}
-Covariance in the direction of the command is estimated based on a linear fit of the distance of the command vs. the covariance of the data. Covariance in the orthogonal direction is fixed to an arbitrary constant.
-\[
-\hat{\Sigma} = \begin{cases}
-\begin{bmatrix} 0.5 & 0 \\ 0 & \max(0.43distance - 0.59, 0.5) \end{bmatrix}, & dir = behind, in\;front\\
-\begin{bmatrix} \max(0.43distance - 0.59, 0.5) & 0 \\ 0 & 0.5 \end{bmatrix}, & dir = left, right
-\end{cases}
-\]
+\subsection{Calculating $T_3$}
+****** TBD ********
 
-This outputs a multivariate normal pdf with parameters $\mu = (\hat{x}, \hat{y}), \Sigma = \hat{Sigma}$.
+\subsection{Calculating $T_4$}
+
+\subsection{Putting it Together}
+
+\subsection{MLE Estimation for Learning Weights}
+
+\section*{OLD STUFF}
 
 \subsection{Object Distance Estimation}
 This is a distribution that penalizes estimated locations that are closer to a different object in the world than they are to the reference object. It takes the form of an exponential distribution. The parameter was found via grid search.

@@ -14,6 +14,7 @@ from utils.world_objects import *
 from reference_algorithms import *
 from algorithm_evaluation import algs_to_test
 from data_utils import *
+from loglin_algorithm import LoglinDistribution, loglin_distributions
 
 """
 Get the data by doing:
@@ -184,7 +185,44 @@ def visualize_all_distributions(data, commands, algorithm, world, filename=None)
 
 	plt.show()
 
-#visualizer for all loglin distributions
+# algorithm is a string, either 'cheating', 'random', or 'naive'
+#loglin algorithms are stored in a different way, easier to just create a new function
+def visualize_all_loglin(data, commands, feature_name, world, filename=None):
+	fig = plt.figure(figsize=(18, 8))
+	fig.subplots_adjust(hspace=0.5)
+	distributions = None
+	if feature_name in loglin_distributions:
+		feats, weights = loglin_distributions[feature_name]
+		distributions = {cmdnum : LoglinDistribution(commands[cmdnum], world, w=weights, feats=feats) for cmdnum in commands}
+	else:
+		raise ValueError("Unknown Feature Set: " + str(algorithm))
+
+	for i in range(1, 13):
+		plt.subplot(3, 4, i)
+		visualize_distribution(data[i], distributions[i], world, block=False)
+		plt.title(commands[i].sentence, fontsize=12)
+
+	if filename:
+		plt.savefig(filename, format='pdf')
+
+	plt.show()
+
+#plots all loglin distributions
+def compare_all_loglin(data, commands, cmdnum, world, names):
+	fig = plt.figure(figsize=(12, 9))
+	fig.subplots_adjust(hspace=0.5)
+
+	fig.suptitle(commands[cmdnum].sentence)
+
+	for i, feature_name in enumerate(names):
+		plt.subplot(2, 2, i + 1)
+		feats, weights = loglin_distributions[feature_name]
+		visualize_distribution(data[cmdnum], LoglinDistribution(commands[cmdnum], world, w=weights, feats=feats), world, block=False)
+		plt.title(feature_name, fontsize=12)
+	plt.show()
+
+
+#visualizer for all multipeak loglin distributions
 def visualize_all_multipeak(data, commands, world, filename=None):
 	fig = plt.figure(figsize=(18, 8))
 	fig.subplots_adjust(hspace=0.5)
@@ -214,13 +252,20 @@ if __name__ == '__main__':
 	else:
 		print "need scene number"
 		sys.exit(1)
-	with open(datafile) as dat:
 
+	#TODO: fix this interface + document it 
+	with open(datafile) as dat:
 		data = data_utils.load_pickle_data(datafile)
 		if len(sys.argv) > 2 and sys.argv[2] != 'save':
 			if len(sys.argv) > 3 and sys.argv[3] == 'save':
 				print "Saved"
 				visualize_all_distributions(data, commands, sys.argv[2], world, sys.argv[4])
+			elif sys.argv[2] == 'loglin':
+				if sys.argv[3] == 'compare':
+					names = ['naive', 'naive_dist', 'naive_objects', 'naive_objects_walls'] #to make sure the names stay in the same order
+					compare_all_loglin(data, commands, int(sys.argv[4]), world, names)
+				else:
+					visualize_all_loglin(data, commands, sys.argv[3], world)
 			else:
 				visualize_all_distributions(data, commands, sys.argv[2], world)
 		elif len(sys.argv) == 4 and sys.argv[2] == 'save':

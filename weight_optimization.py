@@ -55,11 +55,12 @@ Each file contains:
 This information is used to optimize the weights using the matlab code in the grad_descent
 folder.
 """
-def generate_feature_vectors(data, commands, world):
+def generate_feature_vectors(data, commands, world, features = feats_objects):
 	x, y = np.mgrid[0:world.xdim:.1, 0:world.ydim:.1]
 	for i in range(1, 13):
-		Tx = get_feature_matrix(x, y, commands[i], world, all_features)
-		theta = np.mean(get_feature_matrix(data[i][:,0], data[i][:,1], commands[i], world, all_features), 0)
+		cmd = commands[i]
+		Tx = get_feature_matrix(x, y, cmd, cmd.direction, estimate_pos(cmd), world, features)
+		theta = np.mean(get_feature_matrix(data[i][:,0], data[i][:,1], cmd, cmd.direction, estimate_pos(cmd), world, features), 0)
 		sio.savemat('grad_descent/command' + str(i) + '.mat', {'Tx' : Tx, 'theta' : theta})
 
 if __name__ == '__main__':

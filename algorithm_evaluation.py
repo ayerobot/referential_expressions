@@ -141,7 +141,7 @@ def get_error(data, means):
 		for i in range(12):
 			sq_err = (data[i + 1] - means[name][i])**2
 			error[name].append(np.sqrt(np.sum(sq_err, 1))) #array of distances from the predicted mean for each data point, i.e. errors
-		error[name] = np.hstack(error[name]) #combines all errors
+		error[name] = np.hstack(error[name]) #combines all errors across all commands
 	return error
 
 def eval_means(means, data=None, commands=None, filename=None):
@@ -203,11 +203,12 @@ def RMSE_command(data, commands, cmd_num, error, stdev, algs, block=True, filena
 
 
 
-def calculate_RMSE(data, commands, world, distributions, means, algs, filename=None):
+def calculate_MSE(data, commands, world, filename=None):
+	distributions = get_all_distributions(data, commands, world)
+	means = get_means(distributions)
 	error = get_error(data, means)
-	RMSE = {name : np.sqrt(np.sum(error[name]**2)) for name in error}
-	confidence_interval = {name : 2*error[name].std() for name in error} #2 sigma away from the mean
-
+	MSE = {name : np.mean(error[name]**2) for name in error}
+	confidence_interval = {name : 2*error[name].std() for name in error}
 	fig, ax = plt.subplots()
 	colors = ['b', 'y', 'g', 'k', 'm', 'r']
 	width = 1/float(len(RMSE))
@@ -215,16 +216,16 @@ def calculate_RMSE(data, commands, world, distributions, means, algs, filename=N
 	for i, name in enumerate(algs):
 		ax.bar(i*width, RMSE[name], width, color='b', label=name, yerr=confidence_interval[name], ecolor='r')
 	ymin, ymax = ax.get_ylim()
-	mid_points = width/2 + np.arange(len(RMSE))*width
+	mid_points = width/2 + np.arange(len(MSE))*width
 	ax.set_ylim([0, ymax])
 	ax.set_xticks(mid_points)
 	ax.set_xticklabels(algs)
 	ax.set_xlabel('Algorithm')
-	ax.set_ylabel('RMSE')
+	ax.set_ylabel('MSE')
 	if filename:
 		plt.savefig(filename, format='pdf')
 	plt.show()
-	return RMSE
+	return MSE
 
 # I wonder if discrepency in command 7 is because of duct tape?
 # Looks like there was significant overestimation in that case
@@ -253,13 +254,13 @@ if __name__ == '__main__':
 			print "Saved"
 			L2 = eval_means(means, data, commands, algs, filename=sys.argv[4])
 		else:
-			L2 = eval_means(means, data, commands, algs)
-	elif len(sys.argv) > 2 and (sys.argv[2] == 'RMSE' or sys.argv[2] == 'rmse'):
+			L2 = eval_means(means, data, commands)
+	elif len(sys.argv) > 2 and (sys.argv[2] == 'MSE' or sys.argv[2] == 'mse'):
 		if len(sys.argv) > 3 and sys.argv[3] == 'save':
 			print "Saved"
-			RMSE = calculate_RMSE(data, commands, world, distributions, means, algs, filename=sys.argv[4])
+			MSE = calculate_MSE(data, commands, world, filename=sys.argv[4])
 		else:
-			RMSE = calculate_RMSE(data, commands, world, distributions, means, algs)
+			MSE = calculate_MSE(data, commands, world)
 	else:
 		if len(sys.argv) > 2 and sys.argv[2] == 'save':
 			print "Saved"
