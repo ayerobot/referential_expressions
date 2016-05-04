@@ -55,7 +55,7 @@ Each file contains:
 This information is used to optimize the weights using the matlab code in the grad_descent
 folder.
 """
-def generate_feature_vectors(data, commands, world, features = feats_objects):
+def generate_feature_vectors(data, commands, world, features = feats_naive):
 	x, y = np.mgrid[0:world.xdim:.1, 0:world.ydim:.1]
 	for i in range(1, 13):
 		cmd = commands[i]

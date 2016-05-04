@@ -134,14 +134,15 @@ def get_all_loglin(data, commands, world, loglin_data):
 def get_means(distributions):
 	return {name : np.array([distributions[name][i].mean for i in range(1, 13)]) for name in distributions}
 
-
+#returns a dictionary for each algorithm
+#each element in the dictionary is a list
+#each element in the list corresponds to a command, contains a numpy array of the errors (NOT squared errors) for every point in that command 
 def get_error(data, means):
 	error = {name : [] for name in means}
 	for name in means:
 		for i in range(12):
 			sq_err = (data[i + 1] - means[name][i])**2
 			error[name].append(np.sqrt(np.sum(sq_err, 1))) #array of distances from the predicted mean for each data point, i.e. errors
-		error[name] = np.hstack(error[name]) #combines all errors across all commands
 	return error
 
 def eval_means(means, data=None, commands=None, filename=None):
@@ -176,45 +177,56 @@ def eval_means(means, data=None, commands=None, filename=None):
 	plt.show()
 	return L2
 
-#plots the RMSE values for a single command for all algorithms
-def RMSE_command(data, commands, cmd_num, error, stdev, algs, block=True, filename=None):
+#plots the MSE values for a single command for all algorithms
+def MSE_command(commands, cmd_num, errors, algs, block=True, filename=None):
 	ax = plt.gca()
-	RMSE_command = {name: np.sqrt(error[name][cmd_num - 1]) for name in error}
-	confidence_interval = {name: 2*stdev[name][cmd_num - 1] for name in stdev_command}
+
+	MSE_command = {name: np.mean(errors[name][cmd_num - 1]**2) for name in errors} #gets the mean squared error for this command
+	confidence_interval = {name: 2*np.std(errors[name][cmd_num - 1]**2) for name in errors} #twice the standard deviation of the squared errors
 
 	colors = ['b', 'y', 'g', 'k', 'm', 'r']
-	width = 1/float(len(RMSE_command))
+	width = 1/float(len(MSE_command))
 	#algs = ['cheating', 'naive', 'objects', 'objects_walls', 'refpt', 'loglin']
 	for i, name in enumerate(algs):
-		ax.bar(i*width, RMSE_command[name], width, color='b', label=name, yerr=confidence_interval[name], ecolor='r')
+		ax.bar(i*width, MSE_command[name], width, color='b', label=name, yerr=confidence_interval[name], ecolor='r')
 	ymin, ymax = ax.get_ylim()
-	mid_points = width/2 + np.arange(len(RMSE_command))*width
+	mid_points = width/2 + np.arange(len(MSE_command))*width
 	ax.set_ylim([0, ymax])
 	ax.set_xticks(mid_points)
 	ax.set_xticklabels(algs)
 	ax.set_xlabel('Algorithm')
-	ax.set_ylabel('RMSE')
+	ax.set_ylabel('MSE')
+	plt.title(commands[cmd_num].sentence)
 
 	if block:
 		plt.show()
 
 
-#def RMSE_by_command(data, commands, world, distributions, means, algs, filename=None):
+#plots the MSE by each command
+def MSE_all_commands(data, commands, world, distributions, means, algs, filename=None):
+	fig = plt.figure(figsize=(18, 8))
+	fig.subplots_adjust(hspace=0.5)
+
+	#calculate errors 
+	errors = get_error(data, means)
+
+	for i in range(1, 13):
+		plt.subplot(3, 4, i)
+		MSE_command(commands, i, errors, algs, block=False)
+
+	plt.show()
 
 
-
-def calculate_MSE(data, commands, world, filename=None):
-	distributions = get_all_distributions(data, commands, world)
-	means = get_means(distributions)
+def calculate_MSE(data, commands, world, distributions, means, algs, filename=None):
 	error = get_error(data, means)
-	MSE = {name : np.mean(error[name]**2) for name in error}
-	confidence_interval = {name : 2*error[name].std() for name in error}
+	MSE = {name : np.mean(np.hstack(error[name])**2) for name in error} #mean of the squared error
+	confidence_interval = {name : 2*(np.hstack(error[name])**2).std() for name in error} #twice standard deviation of squared error
 	fig, ax = plt.subplots()
 	colors = ['b', 'y', 'g', 'k', 'm', 'r']
-	width = 1/float(len(RMSE))
+	width = 1/float(len(MSE))
 	#algs = ['cheating', 'naive', 'objects', 'objects_walls', 'refpt', 'loglin']
 	for i, name in enumerate(algs):
-		ax.bar(i*width, RMSE[name], width, color='b', label=name, yerr=confidence_interval[name], ecolor='r')
+		ax.bar(i*width, MSE[name], width, color='b', label=name, yerr=confidence_interval[name], ecolor='r')
 	ymin, ymax = ax.get_ylim()
 	mid_points = width/2 + np.arange(len(MSE))*width
 	ax.set_ylim([0, ymax])
@@ -258,9 +270,10 @@ if __name__ == '__main__':
 	elif len(sys.argv) > 2 and (sys.argv[2] == 'MSE' or sys.argv[2] == 'mse'):
 		if len(sys.argv) > 3 and sys.argv[3] == 'save':
 			print "Saved"
-			MSE = calculate_MSE(data, commands, world, filename=sys.argv[4])
+			MSE = calculate_MSE(data, commands, world, distributions, means, algs, filename=sys.argv[4])
 		else:
-			MSE = calculate_MSE(data, commands, world)
+			MSE = calculate_MSE(data, commands, world, distributions, means, algs)
+			#MSE_all_commands(data, commands, world, distributions, means, algs)
 	else:
 		if len(sys.argv) > 2 and sys.argv[2] == 'save':
 			print "Saved"

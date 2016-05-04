@@ -4,7 +4,7 @@
 % hx => uniform distribution over all data points
 % 
 
-num_features = 3;
+num_features = 2;
 num_commands = 12;
 
 Tx_all = {};

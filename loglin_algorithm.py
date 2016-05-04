@@ -1,9 +1,17 @@
 import numpy as np
 
-squared_weights = [6.0255, 1.9138, 0.0696, 0.0354]
-naive_weights = [0.0527, 1.427]
-naive_weights_dist = [5.6146, 1.9158] #including weighting for distance 
-object_weights = [4.8629, 1.9146, 0.0807]
+
+#if the distance term is squared
+# squared_weights = [6.0255, 1.9138, 0.0696, 0.0354]
+# naive_weights = [0.0527, 1.427]
+# naive_weights_dist = [5.6146, 1.9158] #including weighting for distance 
+# object_weights = [4.8629, 1.9146, 0.0807]
+
+#if the distance term is not squared
+squared_weights =   [1.1482, 1.7929, 0.1535, 0.1977]
+object_weights = [0.9984, 1.8522, 0.2531]
+naive_weights_dist = [0.8333, 1.9278]
+naive_weights = [0.0533, 1.9275]
 
 class LoglinDistribution:
 	def __init__(self, command, world, w=squared_weights, feats=None, direction=None, refpt=None):
@@ -91,7 +99,7 @@ def feature_parallel_squared_dist(x, y, cmd, direction, refpt, world, ref_dists)
 
 	direction_hat = direction/np.linalg.norm(direction)
 
-	return -(x_diff*direction_hat[0] + y_diff*direction_hat[1])**2/cmd.distance**2
+	return -(x_diff*direction_hat[0] + y_diff*direction_hat[1])**2/cmd.distance
 
 def feature_parallel_squared(x, y, cmd, direction, refpt, world, ref_dists):
 	x_diff = x - refpt[0]
