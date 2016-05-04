@@ -1,12 +1,15 @@
 import numpy as np
 
 squared_weights = [6.0255, 1.9138, 0.0696, 0.0354]
+naive_weights = [0.0527, 1.427]
+naive_weights_dist = [5.6146, 1.9158] #including weighting for distance 
+object_weights = [4.8629, 1.9146, 0.0807]
 
 class LoglinDistribution:
-	def __init__(self, command, world, w=squared_weights, direction=None, refpt=None):
+	def __init__(self, command, world, w=squared_weights, feats=None, direction=None, refpt=None):
 		self.command = command
 		self.world = world
-		self.features = all_features
+		self.features = feats if feats else all_features 
 		#these two features added for debugging, will be more explicit later
 		self.direction = direction if direction else command.direction
 		self.refpt = refpt if refpt else estimate_pos(command)
@@ -54,7 +57,7 @@ class MultiPeakLoglin:
 		print zip(self.distributions, self.probs)
 		vals_stacked = np.array([distribution.pdf(pts)*prob for distribution, prob in zip(self.distributions, self.probs)])
 
-		return np.sum(vals_stacked, axis=0)
+		return np.sum(vals_stacked, axis=0) 
 
 def estimate_reference_pt(ref, direction):
 	center = ref.center
@@ -82,13 +85,21 @@ def get_ref_dists(x, y, world):
 	return ref_dists
 
 #modified to allow for different direction vectors
-def feature_parallel_squared(x, y, cmd, direction, refpt, world, ref_dists):
+def feature_parallel_squared_dist(x, y, cmd, direction, refpt, world, ref_dists):
 	x_diff = x - refpt[0]
 	y_diff = y - refpt[1]
 
 	direction_hat = direction/np.linalg.norm(direction)
 
 	return -(x_diff*direction_hat[0] + y_diff*direction_hat[1])**2/cmd.distance**2
+
+def feature_parallel_squared(x, y, cmd, direction, refpt, world, ref_dists):
+	x_diff = x - refpt[0]
+	y_diff = y - refpt[1]
+
+	direction_hat = direction/np.linalg.norm(direction)
+
+	return -(x_diff*direction_hat[0] + y_diff*direction_hat[1])**2
 
 def feature_parallel(x, y, cmd, world, ref_dists):
 	mean = estimate_pos(cmd)
@@ -128,9 +139,17 @@ def get_feature_matrix(x, y, cmd, direction, refpt, world, features):
 	f_matrix = f_matrix.T
 	return f_matrix
 
-all_features = [
-			feature_parallel_squared,
-			feature_ortho_squared,
-			feature_objects, 
-			feature_walls
-			]
+
+#different sets of feature vector
+feats_naive = [feature_parallel_squared, feature_ortho_squared]
+feats_naive_dist = [feature_parallel_squared_dist, feature_ortho_squared]
+feats_objects = [feature_parallel_squared_dist, feature_ortho_squared, feature_objects]
+all_features = [feature_parallel_squared_dist, feature_ortho_squared, feature_objects, feature_walls]
+
+#tuples of all features and their corresponding weights
+loglin_distributions = {"naive":(feats_naive, naive_weights), "naive_dist":(feats_naive_dist, naive_weights_dist), "naive_objects": (feats_objects, object_weights), "naive_objects_walls":(all_features, squared_weights)}
+
+
+
+
+

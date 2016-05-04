@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from utils import data_utils
 from utils.world_objects import *
 from reference_algorithms import *
+from loglin_algorithm import LoglinDistribution, loglin_distributions
 
 algs_to_test = {'naive' : naive_algorithm, 
 				'objects' : objects_algorithm, 
@@ -36,14 +37,17 @@ algorithms is a dictionary of the form {<algorithm name> : <function>}
 
 Assumes that all algorithms (except cheating) take in only two arguments, command and world
 """
-def test_algorithms(data, commands, world, algorithms, plot=True, filename=None):
+
+#I think distributions already has this information?
+def test_algorithms(data, commands, world, distributions, algs, plot=True, filename=None):
 	# Cheating algorithm is special case
 	probs = {"cheating" : get_cheating_prob(data)}
-	for alg_name in algorithms:
+	for alg_name in distributions:
 		alg_probs = []
 		for point_set in range(1, 13):
 			# Calculate pdf
-			dist = algorithms[alg_name](commands[point_set], world)
+			#dist = algorithms[alg_name](commands[point_set], world)
+			dist = distributions[alg_name][point_set]
 
 			# Sum of log prob = log of product prob
 			log_prob = np.log(dist.pdf(data[point_set]))
@@ -55,7 +59,7 @@ def test_algorithms(data, commands, world, algorithms, plot=True, filename=None)
 		ind = np.arange(1, 13)
 		width = 1/float(len(probs) + 1)
 		colors = ['b', 'y', 'g', 'k', 'm', 'r']
-		algs = ['cheating', 'naive', 'objects', 'objects_walls', 'refpt', 'loglin']
+		#algs = ['cheating', 'naive', 'objects', 'objects_walls', 'refpt', 'loglin']
 		for i, alg in enumerate(algs):
 			ax.bar(ind + i*width, -probs[alg], width, color=colors[i], label=alg)
 		# add some text for labels, title and axes ticks
@@ -72,14 +76,14 @@ def test_algorithms(data, commands, world, algorithms, plot=True, filename=None)
 	else:
 		return probs
 
-def calculate_logprob(data, commands, world, filename=None):
+def calculate_logprob(data, commands, world, algs, filename=None):
 	probs = test_algorithms(data, commands, world, algs_to_test, False, filename)
 
 	probs = {name : np.sum(probs[name]) for name in probs}
 
 	fig, ax = plt.subplots()
 	width = 1/float(len(probs))
-	algs = ['cheating', 'naive', 'objects', 'objects_walls', 'refpt', 'loglin']
+	#algs = ['cheating', 'naive', 'objects', 'objects_walls', 'refpt', 'loglin']
 	for i, alg in enumerate(algs):
 		ax.bar(i*width, -probs[alg], width, color='b', label=alg)
 
@@ -109,23 +113,35 @@ def eval_algorithms(algorithm_probs):
 	print "L2 Norms: ", L2
 	return diffs
 
-def get_all_distributions(data, commands, world):
-	global algs_to_test
+def get_all_distributions(data, commands, world, algs_to_test):
+	#global algs_to_test
 	distributions = {}
 	distributions['cheating'] = {i : cheating_algorithm(data[i]) for i in range(1, 13)}
 	for alg in algs_to_test:
 		distributions[alg] = {i : algs_to_test[alg](commands[i], world) for i in range(1, 13)}
 	return distributions
 
+#gets all log-linear distributions for each set of features
+def get_all_loglin(data, commands, world, loglin_data):
+	distributions = {}
+	distributions['cheating'] = {i : cheating_algorithm(data[i]) for i in range(1, 13)}
+	for name in loglin_data:
+		feats, weights = loglin_data[name]
+		distributions[name] = {i: LoglinDistribution(commands[i], world, w=weights, feats=feats) for i in range(1, 13)}
+	return distributions
+
+
 def get_means(distributions):
 	return {name : np.array([distributions[name][i].mean for i in range(1, 13)]) for name in distributions}
+
 
 def get_error(data, means):
 	error = {name : [] for name in means}
 	for name in means:
 		for i in range(12):
-			error[name].append(np.sqrt(np.sum((data[i + 1] - means[name][i])**2, 1)))
-		error[name] = np.hstack(error[name])
+			sq_err = (data[i + 1] - means[name][i])**2
+			error[name].append(np.sqrt(np.sum(sq_err, 1))) #array of distances from the predicted mean for each data point, i.e. errors
+		error[name] = np.hstack(error[name]) #combines all errors across all commands
 	return error
 
 def eval_means(means, data=None, commands=None, filename=None):
@@ -160,17 +176,43 @@ def eval_means(means, data=None, commands=None, filename=None):
 	plt.show()
 	return L2
 
+#plots the RMSE values for a single command for all algorithms
+def RMSE_command(data, commands, cmd_num, error, stdev, algs, block=True, filename=None):
+	ax = plt.gca()
+	RMSE_command = {name: np.sqrt(error[name][cmd_num - 1]) for name in error}
+	confidence_interval = {name: 2*stdev[name][cmd_num - 1] for name in stdev_command}
+
+	colors = ['b', 'y', 'g', 'k', 'm', 'r']
+	width = 1/float(len(RMSE_command))
+	#algs = ['cheating', 'naive', 'objects', 'objects_walls', 'refpt', 'loglin']
+	for i, name in enumerate(algs):
+		ax.bar(i*width, RMSE_command[name], width, color='b', label=name, yerr=confidence_interval[name], ecolor='r')
+	ymin, ymax = ax.get_ylim()
+	mid_points = width/2 + np.arange(len(RMSE_command))*width
+	ax.set_ylim([0, ymax])
+	ax.set_xticks(mid_points)
+	ax.set_xticklabels(algs)
+	ax.set_xlabel('Algorithm')
+	ax.set_ylabel('RMSE')
+
+	if block:
+		plt.show()
+
+
+#def RMSE_by_command(data, commands, world, distributions, means, algs, filename=None):
+
+
+
 def calculate_MSE(data, commands, world, filename=None):
 	distributions = get_all_distributions(data, commands, world)
 	means = get_means(distributions)
 	error = get_error(data, means)
 	MSE = {name : np.mean(error[name]**2) for name in error}
 	confidence_interval = {name : 2*error[name].std() for name in error}
-
 	fig, ax = plt.subplots()
 	colors = ['b', 'y', 'g', 'k', 'm', 'r']
 	width = 1/float(len(RMSE))
-	algs = ['cheating', 'naive', 'objects', 'objects_walls', 'refpt', 'loglin']
+	#algs = ['cheating', 'naive', 'objects', 'objects_walls', 'refpt', 'loglin']
 	for i, name in enumerate(algs):
 		ax.bar(i*width, RMSE[name], width, color='b', label=name, yerr=confidence_interval[name], ecolor='r')
 	ymin, ymax = ax.get_ylim()
@@ -184,8 +226,6 @@ def calculate_MSE(data, commands, world, filename=None):
 		plt.savefig(filename, format='pdf')
 	plt.show()
 	return MSE
-
-
 
 # I wonder if discrepency in command 7 is because of duct tape?
 # Looks like there was significant overestimation in that case
@@ -201,12 +241,18 @@ if __name__ == '__main__':
 		print "need scene number"
 		sys.exit(1)
 	data = data_utils.load_pickle_data(datafile)
+	#distributions = get_all_distributions(data, commands, world, algs_to_test)
+	distributions = get_all_loglin(data, commands, world, loglin_distributions)
+	means = get_means(distributions)
+	algs = ['cheating', 'naive', 'naive_dist', 'naive_objects', 'naive_objects_walls']
+	#algs = ['cheating', 'naive', 'objects', 'objects_walls', 'refpt', 'loglin']
+
+	#TODO: fix interface
+
 	if len(sys.argv) > 2 and sys.argv[2] == 'means':
-		distributions = get_all_distributions(data, commands, world)
-		means = get_means(distributions)
 		if len(sys.argv) > 3 and sys.argv[3] == 'save':
 			print "Saved"
-			L2 = eval_means(means, data, commands, filename=sys.argv[4])
+			L2 = eval_means(means, data, commands, algs, filename=sys.argv[4])
 		else:
 			L2 = eval_means(means, data, commands)
 	elif len(sys.argv) > 2 and (sys.argv[2] == 'MSE' or sys.argv[2] == 'mse'):
@@ -218,7 +264,7 @@ if __name__ == '__main__':
 	else:
 		if len(sys.argv) > 2 and sys.argv[2] == 'save':
 			print "Saved"
-			test_algorithms(data, commands, world, algs_to_test, filename=sys.argv[3])
+			test_algorithms(data, commands, world, distributions, algs, filename=sys.argv[3])
 		else:
-			test_algorithms(data, commands, world, algs_to_test)
+			test_algorithms(data, commands, world, distributions, algs)
 
