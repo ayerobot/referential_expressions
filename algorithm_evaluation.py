@@ -124,7 +124,7 @@ def get_all_distributions(data, commands, world, algs_to_test):
 #gets all log-linear distributions for each set of features
 def get_all_loglin(data, commands, world, loglin_data):
 	distributions = {}
-	distributions['cheating'] = {i : cheating_algorithm(data[i]) for i in range(1, 13)}
+	distributions['empirical'] = {i : cheating_algorithm(data[i]) for i in range(1, 13)}
 	for name in loglin_data:
 		feats, weights = loglin_data[name]
 		distributions[name] = {i: LoglinDistribution(commands[i], world, w=weights, feats=feats) for i in range(1, 13)}
@@ -145,12 +145,12 @@ def get_error(data, means):
 			error[name].append(np.sqrt(np.sum(sq_err, 1))) #array of distances from the predicted mean for each data point, i.e. errors
 	return error
 
-def eval_means(means, data=None, commands=None, filename=None):
+def eval_means(means, algs, data=None, commands=None, filename=None):
 	L2 = {}
 	for name in means:
-		if name == 'cheating':
+		if name == 'empirical':
 			continue
-		L2[name] = np.sqrt(np.sum((means['cheating'] - means[name])**2, axis=1))
+		L2[name] = np.sqrt(np.sum((means['empirical'] - means[name])**2, axis=1))
 
 	fig, ax = plt.subplots()
 	ind = np.arange(1, 13)
@@ -161,7 +161,7 @@ def eval_means(means, data=None, commands=None, filename=None):
 		var_parallel = [covs[i][0, 0] if commands[i].direction[0] else covs[i][1, 1] for i in range(1, 13)]
 		stds = [np.sqrt(var) for var in var_parallel]
 		ax.scatter(ind + 2*width, stds, c='b', marker='*', label='Empirical STD')
-	for i, alg in enumerate(algs_to_test):
+	for i, alg in enumerate(algs):
 		ax.bar(ind + i*width, L2[alg], width, color=colors[i], label=alg)
 	ax.set_xlim([1, 13])
 	ymin, ymax = ax.get_ylim()
@@ -170,7 +170,7 @@ def eval_means(means, data=None, commands=None, filename=None):
 	ax.set_xticklabels(ind)
 	ax.set_xlabel('Command Number')
 	ax.set_ylabel('Distance (in)')
-	plt.legend(loc='upper center')
+	plt.legend(loc='upper right')
 	plt.title('Distance between estimated and empirical means')
 	if filename:
 		plt.savefig(filename, format='pdf')
@@ -256,7 +256,7 @@ if __name__ == '__main__':
 	#distributions = get_all_distributions(data, commands, world, algs_to_test)
 	distributions = get_all_loglin(data, commands, world, loglin_distributions)
 	means = get_means(distributions)
-	algs = ['cheating', 'naive', 'naive_dist', 'naive_objects', 'naive_objects_walls']
+	algs = ['empirical', 'Gaussian fit', 'T1, T2', 'T1, T2, T3', 'T1, T2, T3, T4']
 	#algs = ['cheating', 'naive', 'objects', 'objects_walls', 'refpt', 'loglin']
 
 	#TODO: fix interface
@@ -264,9 +264,9 @@ if __name__ == '__main__':
 	if len(sys.argv) > 2 and sys.argv[2] == 'means':
 		if len(sys.argv) > 3 and sys.argv[3] == 'save':
 			print "Saved"
-			L2 = eval_means(means, data, commands, algs, filename=sys.argv[4])
+			L2 = eval_means(means, algs[1:], data, commands, filename=sys.argv[4])
 		else:
-			L2 = eval_means(means, data, commands)
+			L2 = eval_means(means, algs[1:], data, commands) #don't need to use empirical mean here
 	elif len(sys.argv) > 2 and (sys.argv[2] == 'MSE' or sys.argv[2] == 'mse'):
 		if len(sys.argv) > 3 and sys.argv[3] == 'save':
 			print "Saved"

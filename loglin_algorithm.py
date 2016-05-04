@@ -155,7 +155,7 @@ feats_objects = [feature_parallel_squared_dist, feature_ortho_squared, feature_o
 all_features = [feature_parallel_squared_dist, feature_ortho_squared, feature_objects, feature_walls]
 
 #tuples of all features and their corresponding weights
-loglin_distributions = {"naive":(feats_naive, naive_weights), "naive_dist":(feats_naive_dist, naive_weights_dist), "naive_objects": (feats_objects, object_weights), "naive_objects_walls":(all_features, squared_weights)}
+loglin_distributions = {"Gaussian fit":(feats_naive, naive_weights), "T1, T2":(feats_naive_dist, naive_weights_dist), "T1, T2, T3": (feats_objects, object_weights), "T1, T2, T3, T4":(all_features, squared_weights)}
 
 
 
