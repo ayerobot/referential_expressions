@@ -124,7 +124,7 @@ def get_error(data, means):
 	error = {name : [] for name in means}
 	for name in means:
 		for i in range(12):
-			error[name].append(np.sum((data[i + 1] - means[name][i])**2, 1))
+			error[name].append(np.sqrt(np.sum((data[i + 1] - means[name][i])**2, 1)))
 		error[name] = np.hstack(error[name])
 	return error
 
@@ -160,11 +160,11 @@ def eval_means(means, data=None, commands=None, filename=None):
 	plt.show()
 	return L2
 
-def calculate_RMSE(data, commands, world, filename=None):
+def calculate_MSE(data, commands, world, filename=None):
 	distributions = get_all_distributions(data, commands, world)
 	means = get_means(distributions)
 	error = get_error(data, means)
-	RMSE = {name : np.sqrt(np.sum(error[name]**2)) for name in error}
+	MSE = {name : np.mean(error[name]**2) for name in error}
 	confidence_interval = {name : 2*error[name].std() for name in error}
 
 	fig, ax = plt.subplots()
@@ -174,16 +174,16 @@ def calculate_RMSE(data, commands, world, filename=None):
 	for i, name in enumerate(algs):
 		ax.bar(i*width, RMSE[name], width, color='b', label=name, yerr=confidence_interval[name], ecolor='r')
 	ymin, ymax = ax.get_ylim()
-	mid_points = width/2 + np.arange(len(RMSE))*width
+	mid_points = width/2 + np.arange(len(MSE))*width
 	ax.set_ylim([0, ymax])
 	ax.set_xticks(mid_points)
 	ax.set_xticklabels(algs)
 	ax.set_xlabel('Algorithm')
-	ax.set_ylabel('RMSE')
+	ax.set_ylabel('MSE')
 	if filename:
 		plt.savefig(filename, format='pdf')
 	plt.show()
-	return RMSE
+	return MSE
 
 
 
@@ -209,12 +209,12 @@ if __name__ == '__main__':
 			L2 = eval_means(means, data, commands, filename=sys.argv[4])
 		else:
 			L2 = eval_means(means, data, commands)
-	elif len(sys.argv) > 2 and (sys.argv[2] == 'RMSE' or sys.argv[2] == 'rmse'):
+	elif len(sys.argv) > 2 and (sys.argv[2] == 'MSE' or sys.argv[2] == 'mse'):
 		if len(sys.argv) > 3 and sys.argv[3] == 'save':
 			print "Saved"
-			RMSE = calculate_RMSE(data, commands, world, filename=sys.argv[4])
+			MSE = calculate_MSE(data, commands, world, filename=sys.argv[4])
 		else:
-			RMSE = calculate_RMSE(data, commands, world)
+			MSE = calculate_MSE(data, commands, world)
 	else:
 		if len(sys.argv) > 2 and sys.argv[2] == 'save':
 			print "Saved"
