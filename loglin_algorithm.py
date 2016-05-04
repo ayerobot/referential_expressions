@@ -90,6 +90,13 @@ def feature_parallel_squared(x, y, cmd, direction, refpt, world, ref_dists):
 
 	return -(x_diff*direction_hat[0] + y_diff*direction_hat[1])**2/cmd.distance**2
 
+def feature_parallel(x, y, cmd, world, ref_dists):
+	mean = estimate_pos(cmd)
+	if cmd.direction[0]:
+		return -np.abs(x - mean[0])
+	else:
+		return -np.abs(y - mean[1])
+
 def feature_ortho_squared(x, y, cmd, direction, refpt, world, ref_dists):
 	x_diff = x - refpt[0]
 	y_diff = y - refpt[1]
