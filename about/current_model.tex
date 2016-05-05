@@ -33,7 +33,7 @@
 \tab The inputs to our program are a \textbf{command}, natural language spoken by the user, as well as the \textbf{world}, which consists of the \textbf{table} \--- the region where points can lie (literally a ``table") \--- its \textbf{dimensions}, \textbf{objects} on the table, and \textbf{walls} (the edges of the table). Our output is a probability distribution around (x,y) coordinates on the table. Our goal is to develop an algorithm that can understand where humans actually mean when they utter these phrases. That is, to estimate:
 
 \begin{center}
-$p((x,y) | command, world)$
+$\prob((x,y) | command, world)$
 \end{center}
 
 We specify a distribution rather than an ``exact point" because humans themselves do not behave uniformly when referring to these locations. In linguistic terminology, these expressions are vague. To give the reader the intuition, the utterance ``5 inches left of the car" could be referring to any point that is 5 inches extending out from the left side of the car, but humans can choose from what point on the car to extend: this problem we call the problem of how to pick a \textbf{reference point}. Even more broadly, humans can choose to interpret ``left" as relative to the speaker, themselves, or relative to the car itself: humans can choose different \textbf{frames of reference} (Levinson 2001). For our purposes, the \textbf{relative frame of reference} is relative to the robot, and the \textbf{intrinsic frame of reference} is relative to the reference object's intrinsic left/right/front/back (Levinson 2001). To uncover these particular kinds of issues, we performed an experiment on humans discussed below. This experiment also allowed us to establish a human baseline with which to evaluate our algorithms.\\
