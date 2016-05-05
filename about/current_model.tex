@@ -45,7 +45,7 @@ We specify a distribution rather than an ``exact point" because humans themselve
 
 \subsection{Practical Implications}
 
-Our program has many applications, some of which are enumerated below:\\
+Our program has many applications, some of which are enumerated below:
 
 \begin{enumerate}[(1)]
 \item lets the user interact with the robot in placing tasks
@@ -64,7 +64,7 @@ Specifying spatial locations is an important problem that humans can solve, and 
 
 \subsection{Goal}
 
-The overarching goal of our experiment was to figure out exactly how humans interpreted these expressions. We assume that humans use these expressions in the same way that they interpret them: users would want the robot to interpret their expression like a human being would. Thus, the robot can learn how to interpret these expressions by learning from human data. For practical purposes, this data helps us in two ways:\\
+The overarching goal of our experiment was to figure out exactly how humans interpreted these expressions. We assume that humans use these expressions in the same way that they interpret them: users would want the robot to interpret their expression like a human being would. Thus, the robot can learn how to interpret these expressions by learning from human data. For practical purposes, this data helps us in two ways:
 
 \begin{enumerate}[(1)]
 
@@ -81,7 +81,7 @@ Setup for our experiment consisted of a 3x4-feet whiteboard, on which three obje
 \noindent \textbf{Number} \tab	\textbf{Measurement}	 \tab	\textbf{Relation} \tab		\textbf{Object}\\
 five		\tab \tab  	inches	\tab\tab\tab   	behind	\tab	 	the car\\
 
-\noindent \textbf{Number}: Any positive integer, plus optional fractions $1/4$, $1/2$, or $3/4$ \\
+\noindent \textbf{Number}: Any positive integer, optionally plus $1/2$ \\
 \textbf{Measurement}: inch, inches, foot, feet\footnote{Our preliminary experiment told us that American subjects were horrible at estimating centimeters, and would probably never use the metric system in actual speech.}\\
 \textbf{Relation}: ``(to the) left of", ``(to the) right of", ``in front of", ``behind"\\
 \textbf{Object}: ``the lid", ``the keyboard", ``the car", ``the pink bowl"\\
@@ -89,11 +89,12 @@ five		\tab \tab  	inches	\tab\tab\tab   	behind	\tab	 	the car\\
 For our purposes, the \textbf{world} consists only of the whiteboard as a two dimensional object. The \textbf{walls} in this setup were the sides of the whiteboard, and the \textbf{objects} were the three objects taped to it in each experiment.\\
 \tab Our preliminary experiment told us that certain expressions like ``in front of" and ``behind" are interpreted differently when the whiteboard is placed at different heights. Therefore, the whiteboard was elevated at a consistent height to mimic the \textbf{table} on which Baxter sits in the H2R Lab. This way, a human would interact with the white board in the same way Baxter would.\\
 \tab A picture of the outcome of a particular experiment is below:
-
+\begin{center}
 \includegraphics[scale=.1]{"images/scene1"}
-
+\end{center}
 As one can see, the subject placed the number of the command next to each dot: this allowed us to collect data after each experiment.\\ 
-\tab There were four scenes, each with different configuration of objects and different commands. Scene 1 and 2 involved no rotation of the large object (the lid/keyboard); scene 3 and 4 involved rotation of the lid/keyboard. Information about these scenes shown in the following table:\\
+\tab There were four scenes, each with different configuration of objects and different commands. Scene 1 and 2 involved no rotation of the large object (the lid/keyboard); scene 3 and 4 involved rotation of the lid/keyboard. Information about these scenes shown in the following table: \\
+
 
 \begin{tabular}{c c c c c}
 
@@ -139,8 +140,8 @@ Our goal then is to estimate a function $\mathbb{P}(x, y | \lambda, \Gamma)$ whi
 \\
 From the command and reference, we calculate a naive mean, which is the point you would select if you went exactly the distance specified by the command, in the direction specified by the command. From this we calculate four features for a log-linear model. 
 
-\subsection*{Feature Calculation}
-\subsubsection*{Calculating $\hat{\mu}$}
+\subsection{Feature Calculation}
+\subsubsection{Calculating $\hat{\mu}$}
 The naive mean, $\hat{\mu}$, is what is obtained by going exactly the distance specified in the command from the edge of the object. This is calculated as follows:
 \[
 \hat{\mu} = \begin{cases} 
@@ -151,7 +152,7 @@ The naive mean, $\hat{\mu}$, is what is obtained by going exactly the distance s
 \end{cases}
 \]
 
-\subsubsection*{Calculating $T_1$ and $T_2$}
+\subsubsection{Calculating $T_1$ and $T_2$}
 $T_1$ and $T_2$ create a gaussian-like distribution around the naive mean $\hat{\mu}$. $T_1$ penalizes points based on squared distance from $\hat{\mu}$ \emph{in the direction of the command} (e.g. if the direction is `left', then $T_1$ penalizes points based on squared distance from $\hat{\mu}$ in the $x$-axis). In addition, $T_1$ penalizes less if the command is a longer distance (e.g. 1 foot) than if it is a shorter distance (e.g. 1 inch). To experimentally verify this assumption, we fit a line to the empirical Gaussian variances for all commands in experiment 1 (Figure \ref{fig:varplot}). The weighting for this variance, however, was computed using the MLE method described below. $T_2$ penalizes points based on squared distance from $\hat{\mu}$ in the orthogonal direction (e.g. if the direction is `left', then $T_2$ penalizes points based on squared distance from $\hat{\mu}$ in the $y$-axis). \\
 
 \begin{figure}[H]
@@ -176,13 +177,13 @@ T_2(x, y | \lambda, \Gamma) &= [v - \langle v, \lambda_r \rangle\lambda_r]^2 \\
 \end{equation*}
 with $v = (x, y) - \hat{\mu}$ as before.
 
-\subsubsection*{Calculating $T_3$}
+\subsubsection{Calculating $T_3$}
 $T_3$ is a hinge loss, designed to penalize points that are closer to an object other than the reference object (the one used in the command). The value should be zero for points where the reference object is the closest object, and increase linearly as $(x, y)$ get closer to some other object. Let $p_{(x, y), \gamma_i}$ be the point on $\gamma_i$ closest to $(x, y)$. Then,
 \[
 T_3(x, y|\lambda, \Gamma) = ||(x, y) - p_{(x, y), \gamma_{\refobj}}|| - \min_{\gamma_i \in \Gamma} ||(x, y) - p_{(x, y), \gamma_i}||
 \]
 
-\subsubsection*{Calculating $T_4$}
+\subsubsection{Calculating $T_4$}
 $T_4$ is a hinge loss, designed to penalize points that are closer to a wall than to the reference object. The value should be zero for points where the reference object is closer than any wall, and increase linearly as $(x, y)$ get closer to some other object. Let $p_{(x, y), \gamma_i}$ be the point on $\gamma_i$ closest to $(x, y)$. Then,
 \[
 T_4(x, y|\lambda, \Gamma) = \max\Big(0, ||(x, y) - p_{(x, y), \gamma_{\refobj}}|| - \min_{\gamma_{\textmd{wall}_i} \in \Gamma} ||(x, y) - p_{(x, y), \gamma_{\textmd{wall}_i}}||\Big)
