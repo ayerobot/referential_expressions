@@ -126,9 +126,15 @@ Results from this experiment were informative in many ways, enumerated below:
 
 \item \textbf{Frame of Reference}: Subjects always used relative frame of reference for Scene 1 and Scene 2. For rotation scenes (3 and 4), subjects usually used the relative frame of reference for ``left of" and ``right of", but occasionally used the intrinsic frame of reference for objects with intrinsic sides (the keyboard and the car). For ``in front of" and ``behind", subjects used both relative and intrinsic frames of reference, only intrinsic for the keyboard, the car and the lid. 
 
-\item \textbf{Reference points}: Measurement extended from the center of the edge closest to the direction specified in the command OR from the point on the object that was maximally in the direction specified in the command. That is, there is broadly two kinds of ``reference points".
+\item \textbf{Reference points}: Measurement extended from the center of the edge closest to the direction specified in the command OR from the point on the object that was maximally in the direction specified in the command. That is, there is broadly two kinds of ``reference points". As seen in Figure \ref{fig:refpts}, subjects used multiple reference points on the object as well as different frames of reference.
 
-[picture]
+\begin{figure}[H]
+\centering
+\includegraphics[scale=.5]{images/exp_3_cmd_11.png}
+\caption{Experiment 3, Command 11}
+\label{fig:refpts}
+\end{figure}
+
 \end{enumerate}
 
 We address issues 1-4 in our algorithm below. We are currently in the process of developing an algorithm that takes into account 5 and 6, and seeing success.
@@ -370,7 +376,7 @@ The limitations of our current model suggest multiple avenues for future researc
 
 \subsubsection{Introduction}
 
-One such factor is the use of multiple reference frames and reference points on objects with off-axis rotations. As mentioned in Experimental Resultss, humans possess multiple reference frames in which they can refer to objects, such as the relative frame, which contains directions relative to the speaker's orientation, and the intrinsic frame, where directions are defined based on inherent properties of the object. (Levinson 2001) For instance, a car might be placed in any position relative to the speaker, but the speaker has some knowledge of what the ``front" of the car should be regardless of its orientation. As well, we observed in experiments 3 and 4 that objects with off-axis rotations cause human subjects to vary which reference point on they object they use, even if they operate within the relative reference frame. The data points for these objects appears to separate into distinct clusters, suggesting that humans make a decision between discrete reference points and reference frames before choosing a point. 
+One such factor is the use of multiple reference frames and reference points on objects with off-axis rotations. As mentioned in Experimental Resultss, humans possess multiple reference frames in which they can refer to objects, such as the relative frame, which contains directions relative to the speaker's orientation, and the intrinsic frame, where directions are defined based on inherent properties of the object. (Levinson 2001) For instance, a car might be placed in any position relative to the speaker, but the speaker has some knowledge of what the ``front" of the car should be regardless of its orientation. As well, we observed in experiments 3 and 4 (See Figure \ref{fig:refpts} for an example) that objects with off-axis rotations cause human subjects to vary which reference point on they object they use, even if they operate within the relative reference frame. The data points for these objects appears to separate into distinct clusters, suggesting that humans make a decision between discrete reference points and reference frames before choosing a point. 
 
 \subsubsection{Mathematical Approach}
 
@@ -380,7 +386,7 @@ We plan to use a multi-peaked log-linear distribution to more accurately model t
 \sum_{\rho, \vec{v}} \prob(x, y | \lambda,\Gamma, \rho, \vec{v} )\prob(\rho, \vec{v} | \lambda, \Gamma) = \prob(x, y | \lambda, \Gamma)
 \]
 
-However, we do not possess enough data about the relationships between objects, reference frames, and reference points to accurately model the distribution $\prob(\rho, \vec{v} | \lambda, \Gamma)$. A large part of the data collection described above will be gathering enough data to accurately model this relationship. 
+However, we do not possess enough data about the relationships between objects, reference frames, and reference points to accurately model the distribution $\prob(\rho, \vec{v} | \lambda, \Gamma)$. A large part of the data collection described above will be gathering enough data to accurately model this relationship. We are evaluating an Attentional Vector Sum (AVS)-like approach (Regier and Carlson 2001) to generating direction vectors from frames of reference and reference points, but we will have to determine how to adapt their algorithm to our situation. 
 
 \subsection{Improved Parsing}
 
