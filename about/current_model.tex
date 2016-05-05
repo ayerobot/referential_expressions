@@ -127,15 +127,23 @@ Results from this experiment were informative in many ways, enumerated below:
 
 \item \textbf{Frame of Reference}: Subjects always used relative frame of reference for Scene 1 and Scene 2. For rotation scenes (3 and 4), subjects usually used the relative frame of reference for ``left of" and ``right of", but occasionally used the intrinsic frame of reference for objects with intrinsic sides (the keyboard and the car). For ``in front of" and ``behind", subjects used both relative and intrinsic frames of reference, only intrinsic for the keyboard, the car and the lid. 
 
-\item \textbf{Reference points}: Measurement extended from the center of the edge closest to the direction specified in the command OR from the point on the object that was maximally in the direction specified in the command. That is, there is broadly two kinds of ``reference points".
+\item \textbf{Reference points}: Measurement extended from the center of the edge closest to the direction specified in the command OR from the point on the object that was maximally in the direction specified in the command. That is, there is broadly two kinds of ``reference points". As seen in Figure \ref{fig:refpts}, subjects used multiple reference points on the object as well as different frames of reference.
 
-[picture]
+\begin{figure}[H]
+\centering
+\includegraphics[scale=.5]{images/exp_3_cmd_11.png}
+\caption{Experiment 3, Command 11}
+\label{fig:refpts}
+\end{figure}
+
 \end{enumerate}
 
 We address issues 1-4 in our algorithm below. We are currently in the process of developing an algorithm that takes into account 5 and 6, and seeing success.
 
 
 \section{Mathematical Model}
+In this section we introduce a log-linear model for estimating the probability that the user was referring to a particular point $(x, y)$ given his/her command and the ``world'' (knowledge of the table). We chose a log-linear model because it allowed us to easily introduce new features and find the weights of the features. The features are later evaluated by turning some off and showing that MSE improves as each new feature is added. \\
+\\
 Let $\Gamma$ represent the knowledge of the table. $\Gamma$ is composed of $\gamma_1, \ldots, \gamma_n$, corresponding to the objects on the table, and $\gamma_{\textmd{wall}_1}, \gamma_{\textmd{wall}_2}, \gamma_{\textmd{wall}_3}, \gamma_{\textmd{wall}_4}$, corresponding to the four walls (edges) of the table. Each $\gamma$ contains position and dimension information about the object in question.   \\
 \\
 Let $\lambda$ be the command the user gives, consisting of a distance $\lambda_d$ a direction (relation) $\lambda_r$ and a reference object $\lambda_f$. For the sake of testing this algorithm, we will assume perfect ability to parse the command and extract this information. Therefore we assume there is a perfect correspondence between $\lambda_f$ and $\gamma_\refobj$, where $\gamma_\refobj \in \{\gamma_1, \ldots, \gamma_n\}$. In addition, we assume that the direction is in the set $\{$left, right, in front, behind$\}$ and map $\lambda_r$ to the corresponding direction vectors $\{[1, 0], [-1, 0], [0, 1], [0, -1]\}$.  Underlying this assumption is the larger assumption that all commands map to a single direction vector - discussion of how we plan to improve this can be found later in this paper. We assume that the distance $\lambda_d$ of a command is independent of the direction $\lambda_r$. Finally, we only deal with two dimensions, so don't consider commands that involve the $z$-axis. \\
@@ -252,26 +260,25 @@ where $w$ is a vector of weights. We then learn the weights using MLE estimation
 \subsubsection{MLE Estimation for Learning Weights}
 We trained the model using the data from scene \#1. We assume each data point is an iid sample from $\prob_w(x, y|\lambda, \Gamma)$. Let the 12 commands be specified by $\lambda^{(1)}, \ldots, \lambda^{(12)}$. For each command we collected 10 data points. Let $X$ represent all the data and let $X^{(i)}_j$ be the $j$-th data point for the $i$-th command. Then the joint probability of the data points can be expressed as
 
-\begin{equation*}
-\begin{split}
-\prob_w(X|\lambda^{(1)}, \ldots, \lambda^{(12)}, \Gamma) &= \prod_{i = 1}^{12}\prod_{j = 1}^{10} \frac{1}{z_w(\lambda^{(i)}, \Gamma)}\exp\bigg(\sum_{c = 1}^4w_cT_c(X^{(i)}_j|\lambda^{(i)}, \Gamma)\bigg) \\
-&= \bigg(\prod_{i = 1}^{12}\prod_{j = 1}^{10} \frac{1}{z_w(\lambda^{(i)}, \Gamma)}\bigg)\bigg(\prod_{i = 1}^{12}\prod_{j = 1}^{10}\exp\bigg(\sum_{c = 1}^4w_cT_c(X^{(i)}_j|\lambda^{(i)}, \Gamma)\bigg)\bigg) \\
-&= \bigg(\prod_{i = 1}^{12}\prod_{j = 1}^{10} \frac{1}{z_w(\lambda^{(i)}, \Gamma)}\bigg)\exp\bigg(\sum_{c = 1}^4w_c\sum_{i = 1}^{12}\sum_{j = 1}^{10}T_c(X^{(i)}_j|\lambda^{(i)}, \Gamma)\bigg)
-\end{split}
-\end{equation*}
+\[
+\prob_w(X|\lambda^{(1)}, \ldots, \lambda^{(12)}, \Gamma) = \prod_{i = 1}^{12}\prod_{j = 1}^{10} \frac{1}{z_w(\lambda^{(i)}, \Gamma)}\exp\bigg(\sum_{c = 1}^4w_cT_c(X^{(i)}_j|\lambda^{(i)}, \Gamma)\bigg) 
+\]
 
 Our goal then is to find the argmax over $w$ of this function. This is the same as finding the argmin of the negative log, so we have
 \begin{equation*}
 \begin{split}
 w^* &= \argmin_w -\log\prob_w(X|\lambda^{(1)}, \ldots, \lambda^{(12)}, \Gamma) \\
-&= \argmin_w \sum_{i = 1}^{12}\sum_{j = 1}^{10}\log(z_w(\lambda^{(i)}, \Gamma)) - \sum_{c = 1}^4w_c\sum_{i = 1}^{12}\sum_{j = 1}^{10}T_c(X^{(i)}_j|\lambda^{(i)}, \Gamma)
+&= \argmin_w \sum_{i = 1}^{12}\sum_{j = 1}^{10}\bigg[\log(z_w(\lambda^{(i)}, \Gamma)) - \sum_{c = 1}^4w_cT_c(X^{(i)}_j|\lambda^{(i)}, \Gamma)\bigg]
 \end{split}
 \end{equation*}
 
 This is the sum of exponential families, one for each $i, j$. Therefore the derivative with respect to $w_c$ of the log partition function is the expected value of the $c$-th feature. Therefore, 
-\[
-\frac{\partial}{\partial w_c} -\log\prob_w(X|\lambda^{(1)}, \ldots, \lambda^{(12)}, \Gamma) = \sum_{i = 1}^{12}\sum_{j = 1}^{10} \E_w[T_c(x, y|\lambda^{(i)}, \Gamma)] - \sum_{i = 1}^{12}\sum_{j = 1}^{10}T_c(X^{(i)}_j|\lambda^{(i)}, \Gamma)
-\]
+\begin{equation*}
+\begin{split}
+\frac{\partial}{\partial w_c} [-\log\prob_w(X|\lambda^{(1)}, \ldots, \lambda^{(12)}, \Gamma)] &= \sum_{i = 1}^{12}\sum_{j = 1}^{10} \bigg[\E_w[T_c(x, y|\lambda^{(i)}, \Gamma)] - T_c(X^{(i)}_j|\lambda^{(i)}, \Gamma)\bigg] \\
+&= \sum_{i = 1}^{12}\sum_{j = 1}^{10} \E_w[T_c(x, y|\lambda^{(i)}, \Gamma)] - \sum_{i = 1}^{12}\sum_{j = 1}^{10}T_c(X^{(i)}_j|\lambda^{(i)}, \Gamma)
+\end{split}
+\end{equation*}
 
 We use this to perform gradient descent. In order to calculate the probabilities and the partition function, we discretize the table with a grid of step size 0.1 inches. Once we do this, we have all the components necessary to calculate the gradient, and so we perform gradient descent until the gradient falls below a threshold level.
 
@@ -363,15 +370,27 @@ The second conclusion derives from the MSE evaluation. As shown in Figure \ref{f
 
 \section{Future Research}
 
+\subsection{Gathering Data}
+
 The limitations of our current model suggest multiple avenues for future research. The first is dramatically increasing the size of our data set, both in terms of $\lambda, \Gamma$ pairs and number of data points gathered per pair. This will reduce statistical variation in the training and test sets, and provide a larger set of training data so more accurate weight vectors can be gathered. With a sufficiently large data set, we could use cross-validation to train our model instead of merely using a training and test set. A larger data set will also provide insight into other factors affecting human behavior, allowing us to add more features or parameters to the model if necessary. We plan to investigate the use of Amazon Mechanical Turk to rapidly gather large data sets, if the tradeoffs (especially the lack of spatial grounding in relation to performing in-person experiments) are not too great. 
 
-One such factor is the use of multiple reference frames and reference points on objects with off-axis rotations. Humans possess multiple reference frames in which they can refer to objects, such as the relative frame, which contains directions relative to the speaker's orientation, and the intrinsic frame, where directions are defined based on inherent properties of the object. (Levinson 2001) For instance, a car might be placed in any position relative to the speaker, but the speaker has some knowledge of what the ``front" of the car should be regardless of its orientation. As well, we observed in experiments that objects with off-axis rotations cause human subjects to vary which reference point on they object they use, even if they operate within the relative reference frame. The data points for these objects appears to separate into distinct clusters, suggesting that humans make a decision between discrete reference points and reference frames before choosing a point. We plan to use a multi-peaked log-linear distribution to more accurately model this situation, by modifying features T1 and T2 to accept arbitrary direction vectors and reference points. With a knowledge of the distribution of reference points $\rho$ and direction vectors $\vec{v}$, we can then marginalize over the joint probability $\prob(x, y | \lambda,\Gamma, \rho, \vec{v} )\prob(\rho, \vec{v} | \lambda, \Gamma)$ to produce a multi-peaked distribution. 
+\subsection{Frames of Reference}
+
+\subsubsection{Introduction}
+
+One such factor is the use of multiple reference frames and reference points on objects with off-axis rotations. As mentioned in Experimental Resultss, humans possess multiple reference frames in which they can refer to objects, such as the relative frame, which contains directions relative to the speaker's orientation, and the intrinsic frame, where directions are defined based on inherent properties of the object. (Levinson 2001) For instance, a car might be placed in any position relative to the speaker, but the speaker has some knowledge of what the ``front" of the car should be regardless of its orientation. As well, we observed in experiments 3 and 4 (See Figure \ref{fig:refpts} for an example) that objects with off-axis rotations cause human subjects to vary which reference point on they object they use, even if they operate within the relative reference frame. The data points for these objects appears to separate into distinct clusters, suggesting that humans make a decision between discrete reference points and reference frames before choosing a point. 
+
+\subsubsection{Mathematical Approach}
+
+We plan to use a multi-peaked log-linear distribution to more accurately model this situation, if we no longer constrain T1 and T2 to the four cardinal values of $\lambda_r$ mentioned above, allowing the generation of naive means in arbitrary directions. These latent variables will be generated from knowledge of the object's pose in the world $\gamma$, as well as inherent properties of the object for determining directions relative to intrinsic reference frame. Determining how to gather these object properties is largely a vision and object recognition problem. With a knowledge of the distribution of reference points $\rho$ and direction vectors $\vec{v}$, we can then marginalize over the joint probability $\prob(x, y | \lambda,\Gamma, \rho, \vec{v} )\prob(\rho, \vec{v} | \lambda, \Gamma)$ to produce a multi-peaked distribution. 
 
 \[
 \sum_{\rho, \vec{v}} \prob(x, y | \lambda,\Gamma, \rho, \vec{v} )\prob(\rho, \vec{v} | \lambda, \Gamma) = \prob(x, y | \lambda, \Gamma)
 \]
 
-However, we do not possess enough data about the relationships between objects, reference frames, and reference points to accurately model the distribution $\prob(\rho, \vec{v} | \lambda, \Gamma)$. A large part of the data collection described above will be gathering enough data to accurately model this relationship. 
+However, we do not possess enough data about the relationships between objects, reference frames, and reference points to accurately model the distribution $\prob(\rho, \vec{v} | \lambda, \Gamma)$. A large part of the data collection described above will be gathering enough data to accurately model this relationship. We are evaluating an Attentional Vector Sum (AVS)-like approach (Regier and Carlson 2001) to generating direction vectors from frames of reference and reference points, but we will have to determine how to adapt their algorithm to our situation. 
+
+\subsection{Improved Parsing}
 
 We also plan to pursue a better model of the relationship between space and language by developing more advanced parsing capabilities. To simplify our parser, we restricted the language used to a standardized format when conducting our experiments. However, humans can use a variety of natural language phrases when describing points in space. We plan to perform ``inverted" versions of our experiments, where humans are given a point in space and asked to describe it using natural language. From there, in combination with linguistic and psychological research on this subject, we can begin to develop a parser that more accurately captures a mapping between natural language and spatial relationships. 
 

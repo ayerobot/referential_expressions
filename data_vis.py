@@ -105,7 +105,7 @@ def visualize_commands(data, world, commands, command_numbers):
 	plt.show()
 
 #only plots points from a single command, then labels it by the subject number
-def visualize_command(data, world, commands, cmd_num, block = True):
+def visualize_command(data, world, commands, cmd_num, block = True, nums = False):
 	ax = plt.gca()
 	ax.set_xlim([0, world.xdim]) # Set x dim to 4 feet
 	ax.set_ylim([0, world.ydim]) # Set y dim to 3 feet
@@ -118,8 +118,11 @@ def visualize_command(data, world, commands, cmd_num, block = True):
 	points_x = data[cmd_num][:,0]
 	points_y = data[cmd_num][:,1]
 
-	for i in range(0, len(points_x)):
-		plt.text(points_x[i], points_y[i], str(i + 1))
+	if nums:
+		for i in range(0, len(points_x)):
+			plt.text(points_x[i], points_y[i], str(i + 1))
+	else:
+		plt.scatter(points_x, points_y, color='red')
 
 	plt.title(commands[cmd_num].sentence)
 
@@ -272,4 +275,5 @@ if __name__ == '__main__':
 			print "Saved"
 			visualize(data, world, commands, sys.argv[3])
 		else:
-			visualize(data, world, commands)
+			#visualize(data, world, commands)
+			visualize_command(data, world, commands, 11)
