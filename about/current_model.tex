@@ -362,15 +362,27 @@ The second conclusion derives from the MSE evaluation. As shown in Figure \ref{f
 
 \section{Future Research}
 
+\subsection{Gathering Data}
+
 The limitations of our current model suggest multiple avenues for future research. The first is dramatically increasing the size of our data set, both in terms of $\lambda, \Gamma$ pairs and number of data points gathered per pair. This will reduce statistical variation in the training and test sets, and provide a larger set of training data so more accurate weight vectors can be gathered. With a sufficiently large data set, we could use cross-validation to train our model instead of merely using a training and test set. A larger data set will also provide insight into other factors affecting human behavior, allowing us to add more features or parameters to the model if necessary. We plan to investigate the use of Amazon Mechanical Turk to rapidly gather large data sets, if the tradeoffs (especially the lack of spatial grounding in relation to performing in-person experiments) are not too great. 
 
-One such factor is the use of multiple reference frames and reference points on objects with off-axis rotations. Humans possess multiple reference frames in which they can refer to objects, such as the relative frame, which contains directions relative to the speaker's orientation, and the intrinsic frame, where directions are defined based on inherent properties of the object. (Levinson 2001) For instance, a car might be placed in any position relative to the speaker, but the speaker has some knowledge of what the ``front" of the car should be regardless of its orientation. As well, we observed in experiments that objects with off-axis rotations cause human subjects to vary which reference point on they object they use, even if they operate within the relative reference frame. The data points for these objects appears to separate into distinct clusters, suggesting that humans make a decision between discrete reference points and reference frames before choosing a point. We plan to use a multi-peaked log-linear distribution to more accurately model this situation, by modifying features T1 and T2 to accept arbitrary direction vectors and reference points. With a knowledge of the distribution of reference points $\rho$ and direction vectors $\vec{v}$, we can then marginalize over the joint probability $\prob(x, y | \lambda,\Gamma, \rho, \vec{v} )\prob(\rho, \vec{v} | \lambda, \Gamma)$ to produce a multi-peaked distribution. 
+\subsection{Frames of Reference}
+
+\subsubsection{Introduction}
+
+One such factor is the use of multiple reference frames and reference points on objects with off-axis rotations. As mentioned in Experimental Resultss, humans possess multiple reference frames in which they can refer to objects, such as the relative frame, which contains directions relative to the speaker's orientation, and the intrinsic frame, where directions are defined based on inherent properties of the object. (Levinson 2001) For instance, a car might be placed in any position relative to the speaker, but the speaker has some knowledge of what the ``front" of the car should be regardless of its orientation. As well, we observed in experiments 3 and 4 that objects with off-axis rotations cause human subjects to vary which reference point on they object they use, even if they operate within the relative reference frame. The data points for these objects appears to separate into distinct clusters, suggesting that humans make a decision between discrete reference points and reference frames before choosing a point. 
+
+\subsubsection{Mathematical Approach}
+
+We plan to use a multi-peaked log-linear distribution to more accurately model this situation, by modifying features T1 and T2 to accept arbitrary frames of reference, direction vectors, and reference points. These latent variables will be generated from knowledge of the object's pose in the world $\gamma$, as well as inherent properties of the object for determining directions relative to intrinsic reference frame. Determining how to gather these object properties is largely a vision and object recognition problem. With a knowledge of the distribution of reference points $\rho$ and direction vectors $\vec{v}$, we can then marginalize over the joint probability $\prob(x, y | \lambda,\Gamma, \rho, \vec{v} )\prob(\rho, \vec{v} | \lambda, \Gamma)$ to produce a multi-peaked distribution. 
 
 \[
 \sum_{\rho, \vec{v}} \prob(x, y | \lambda,\Gamma, \rho, \vec{v} )\prob(\rho, \vec{v} | \lambda, \Gamma) = \prob(x, y | \lambda, \Gamma)
 \]
 
 However, we do not possess enough data about the relationships between objects, reference frames, and reference points to accurately model the distribution $\prob(\rho, \vec{v} | \lambda, \Gamma)$. A large part of the data collection described above will be gathering enough data to accurately model this relationship. 
+
+\subsection{Improved Parsing}
 
 We also plan to pursue a better model of the relationship between space and language by developing more advanced parsing capabilities. To simplify our parser, we restricted the language used to a standardized format when conducting our experiments. However, humans can use a variety of natural language phrases when describing points in space. We plan to perform ``inverted" versions of our experiments, where humans are given a point in space and asked to describe it using natural language. From there, in combination with linguistic and psychological research on this subject, we can begin to develop a parser that more accurately captures a mapping between natural language and spatial relationships. 
 
