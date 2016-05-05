@@ -32,16 +32,14 @@
 \tab In English, \textbf{exact locations} are referred to using measurement phrases (``five inches", ``one foot") which co-occur with prepositional phrases like ``to the right of X" and ``to the left of X". Our program would allow us to parse statements such as ``five inches left of the car". Essentially, our program provides a way for robots to interpret an answer the question: \textit{where? Where is the new object I haven't scanned for yet? Where should I put this object down? Where has this object been moved to?}\\
 \tab The inputs to our program are a \textbf{command}, natural language spoken by the user, as well as the \textbf{world}, which consists of the \textbf{table} \--- the region where points can lie (literally a ``table") \--- its \textbf{dimensions}, \textbf{objects} on the table, and \textbf{walls} (the edges of the table). Our output is a probability distribution around (x,y) coordinates on the table. Our goal is to develop an algorithm that can understand where humans actually mean when they utter these phrases. That is, to estimate:
 
-\begin{center}
-$\prob((x,y) | command, world)$
-\end{center}
+\[\prob((x,y) | command, world)\]
 
 We specify a distribution rather than an ``exact point" because humans themselves do not behave uniformly when referring to these locations. In linguistic terminology, these expressions are vague. To give the reader the intuition, the utterance ``5 inches left of the car" could be referring to any point that is 5 inches extending out from the left side of the car, but humans can choose from what point on the car to extend: this problem we call the problem of how to pick a \textbf{reference point}. Even more broadly, humans can choose to interpret ``left" as relative to the speaker, themselves, or relative to the car itself: humans can choose different \textbf{frames of reference} (Levinson 2001). For our purposes, the \textbf{relative frame of reference} is relative to the robot, and the \textbf{intrinsic frame of reference} is relative to the reference object's intrinsic left/right/front/back (Levinson 2001). To uncover these particular kinds of issues, we performed an experiment on humans discussed below. This experiment also allowed us to establish a human baseline with which to evaluate our algorithms.\\
 \tab Moreover, a distribution is helpful for future practical applications of our algorithm. For example, if a human moves an object and tells the robot ``it is 5 inches left of the car", the robot will want to scan intelligently in a particular area surrounding that point. Without a distribution, it only has the point itself to rely on. 
 
 \subsection{Previous Research}
 
-\tab Currently, Baxter can pick up objects that are directly referred to with voice commands, such as ``give me the wooden bowl." Researchers in the Humans to Robots lab are improving Baxter's ability to interact with humans and refer to objects in Baxter's workspace, and much of their research is extremely relevant to our project. Emily Wu is developing social feedback mechanisms based on language grounding, Advik Guha is determining object placement in a discrete grid with POMDPs, and Gaurav Manek is developing a object-detection parser using natural language prepositional phrases. Although Guha's work specifies locations, he focuses on robot action, using a limited language parser that does not include reference to exact locations through speech (he mostly uses pointing). Our algorithm adds the ability to numerically specify locations relative to reference points. Although Gaurav builds an intelligent parser that encompasses a wide range of locational features and words (like ``between", ``above", ``to the left of", ``in front of"), he uses it to predict groundings of particular objects, not locations in space. We plan to bridge these two different projects: to build an intelligent natural-language observation function that specifies locations in space (without corresponding actions).
+\tab Researchers in the Humans to Robots lab are improving Baxter's ability to interact with humans and refer to objects in Baxter's workspace, and much of their research is extremely relevant to our project. Currently, Baxter can pick up objects that are directly referred to with voice commands, such as ``give me the wooden bowl."  Emily Wu is developing social feedback mechanisms based on language grounding, Advik Guha is determining object placement in a discrete grid with POMDPs, and Gaurav Manek is developing a object-detection parser using natural language prepositional phrases. Although Guha's work specifies locations, he focuses on robot action, using a limited language parser that does not include reference to exact locations through speech (he mostly uses pointing). Our algorithm adds the ability to numerically specify locations relative to reference points. Although Gaurav builds an intelligent parser that encompasses a wide range of locational features and words (like ``between", ``above", ``to the left of", ``in front of"), he uses it to predict groundings of particular objects, not locations in space. We plan to bridge these two different projects: to build an intelligent natural-language observation function that specifies locations in space (without corresponding actions).
 
 \subsection{Practical Implications}
 
@@ -50,15 +48,14 @@ Our program has many applications, some of which are enumerated below:
 \begin{enumerate}[(1)]
 \item lets the user interact with the robot in placing tasks
 \item allows the user to specify a new location of an object if the object has moved
-\item allows the user to set waypoints that the robot could use for further tasks: e.g. if a user wanted to use a particular location in space that the robot could not detect using vision \\
-...... and many more
+\item allows the user to set waypoints that the robot could use for further tasks: e.g. if a user wanted to use a particular location in space that the robot could not detect using vision 
 \end{enumerate}
 
 Specifying spatial locations is an important problem that humans can solve, and would generalize into many other tasks in robotics. 
 
 \subsection{Roadmap}
 
-\textbf{Section 2} discusses our experiment that provided a human baseline for training and testing our algorithms. \textbf{Section 3} presents three different mathematical models that capture the problem \--- random, ``naive Gaussian", and a log linear model.  \textbf{Section 4} evaluates these models. \textbf{Section 5} discusses extensions of our model currently being worked on, as well as future research. \textbf{Section 6} concludes.
+\textbf{Section 2} discusses our experiment that provided a human baseline for training and testing our algorithms. \textbf{Section 3} presents a log linear model that creates a distribution over spatial coordinates given a command and world. There we derive four features of the model use MLE estimation to find their weights. \textbf{Section 4} evaluates this model with different features turned on and off. \textbf{Section 5} discusses extensions of our model currently being worked on, as well as future research. \textbf{Section 6} concludes.
 
 \section{Human Experiment}
 
@@ -76,7 +73,7 @@ We used a preliminary experiment, similar to the following one, to inform the fo
 
 \subsection{Method}
 
-Setup for our experiment consisted of a 3x4-feet whiteboard, on which three objects were taped. Subjects were prompted with twelve commands referring to points on the whiteboard relative to the objects; for each command, they placed a dot on the point on the whiteboard that they thought the expression referred. Each command was of the following form, and drawn from the sets below:\\
+Setup for our experiment consisted of a 3x4-foot whiteboard, on which three objects were taped. Subjects were prompted with twelve commands referring to points on the whiteboard relative to the objects; for each command, they placed a dot on the point on the whiteboard that they thought the expression referred. Each command was of the following form, and drawn from the sets below:\\
 
 \noindent \textbf{Number} \tab	\textbf{Measurement}	 \tab	\textbf{Relation} \tab		\textbf{Object}\\
 five		\tab \tab  	inches	\tab\tab\tab   	behind	\tab	 	the car\\
