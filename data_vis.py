@@ -48,7 +48,7 @@ def plot_distance_parallel(data, commands, filename=None):
 		bestfit_points  = bestfit_points + (distance_range**(degree - i))*line_bestfit[i]
 	bestfit_points2 = distance_range*0.43 - 0.59
 	plt.plot(distance_range, bestfit_points, label=equation)
-	plt.plot(distance_range, bestfit_points2, label='old equation')
+	#plt.plot(distance_range, bestfit_points2, label='old equation')
 	plt.legend()
 	plt.scatter(distance, variances_in_direction)
 	ax.set_xlabel('Distance of Command (inches)')

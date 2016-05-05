@@ -59,9 +59,11 @@ def test_algorithms(data, commands, world, distributions, algs, plot=True, filen
 		ind = np.arange(1, 13)
 		width = 1/float(len(probs) + 1)
 		colors = ['b', 'y', 'g', 'k', 'm', 'r']
+		cmap = plt.get_cmap('gnuplot')
+		colors = [cmap(i) for i in np.linspace(0, 1, 6)]
 		#algs = ['cheating', 'naive', 'objects', 'objects_walls', 'refpt', 'loglin']
 		for i, alg in enumerate(algs):
-			ax.bar(ind + i*width, -probs[alg], width, color=colors[i], label=alg)
+			ax.bar(ind + i*width, -probs[alg], width, color=colors[i + 1], label=alg)
 		# add some text for labels, title and axes ticks
 		ax.set_xlabel('Command Number')
 		ax.set_ylabel('-log prob of product of data')
@@ -84,8 +86,10 @@ def calculate_logprob(data, commands, world, algs, filename=None):
 	fig, ax = plt.subplots()
 	width = 1/float(len(probs))
 	#algs = ['cheating', 'naive', 'objects', 'objects_walls', 'refpt', 'loglin']
+	cmap = plt.get_cmap('gnuplot')
+	colors = [cmap(i) for i in np.linspace(0, 1, 6)]
 	for i, alg in enumerate(algs):
-		ax.bar(i*width, -probs[alg], width, color='b', label=alg)
+		ax.bar(i*width, -probs[alg], width, color=colors[i], label=alg)
 
 	ax.set_xlabel('Algorithms')
 	ax.set_ylabel('-log prob of product of data')
@@ -155,14 +159,16 @@ def eval_means(means, algs, data=None, commands=None, filename=None):
 	fig, ax = plt.subplots()
 	ind = np.arange(1, 13)
 	width = 1/float(len(L2) + 1)
-	colors = ['y', 'g', 'k', 'm', 'r']
+	#colors = ['red', 'green', 'blue', 'yellow', 'r']
+	cmap = plt.get_cmap('gnuplot')
+	colors = [cmap(i) for i in np.linspace(0, 1, 5)]
+	for i, alg in enumerate(algs):
+		ax.bar(ind + i*width, L2[alg], width, color=colors[i + 1], label=alg)
 	if data and commands:
 		covs = {pt : np.cov(data[pt].T) for pt in data}
 		var_parallel = [covs[i][0, 0] if commands[i].direction[0] else covs[i][1, 1] for i in range(1, 13)]
 		stds = [np.sqrt(var) for var in var_parallel]
-		ax.scatter(ind + 2*width, stds, c='b', marker='*', label='Empirical STD')
-	for i, alg in enumerate(algs):
-		ax.bar(ind + i*width, L2[alg], width, color=colors[i], label=alg)
+		ax.scatter(ind + 2*width, stds, c='k', marker='*', label='Empirical STD', zorder=10)
 	ax.set_xlim([1, 13])
 	ymin, ymax = ax.get_ylim()
 	ax.set_ylim([0, ymax])
