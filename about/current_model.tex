@@ -32,9 +32,7 @@
 \tab In English, \textbf{exact locations} are referred to using measurement phrases (``five inches", ``one foot") which co-occur with prepositional phrases like ``to the right of X" and ``to the left of X". Our program would allow us to parse statements such as ``five inches left of the car". Essentially, our program provides a way for robots to interpret an answer the question: \textit{where? Where is the new object I haven't scanned for yet? Where should I put this object down? Where has this object been moved to?}\\
 \tab The inputs to our program are a \textbf{command}, natural language spoken by the user, as well as the \textbf{world}, which consists of the \textbf{table} \--- the region where points can lie (literally a ``table") \--- its \textbf{dimensions}, \textbf{objects} on the table, and \textbf{walls} (the edges of the table). Our output is a probability distribution around (x,y) coordinates on the table. Our goal is to develop an algorithm that can understand where humans actually mean when they utter these phrases. That is, to estimate:
 
-\begin{center}
-$p((x,y) | command, world)$
-\end{center}
+\[\prob((x,y) | command, world)\]
 
 We specify a distribution rather than an ``exact point" because humans themselves do not behave uniformly when referring to these locations. In linguistic terminology, these expressions are vague. To give the reader the intuition, the utterance ``5 inches left of the car" could be referring to any point that is 5 inches extending out from the left side of the car, but humans can choose from what point on the car to extend: this problem we call the problem of how to pick a \textbf{reference point}. Even more broadly, humans can choose to interpret ``left" as relative to the speaker, themselves, or relative to the car itself: humans can choose different \textbf{frames of reference} (Levinson 2001). For our purposes, the \textbf{relative frame of reference} is relative to the robot, and the \textbf{intrinsic frame of reference} is relative to the reference object's intrinsic left/right/front/back (Levinson 2001). To uncover these particular kinds of issues, we performed an experiment on humans discussed below. This experiment also allowed us to establish a human baseline with which to evaluate our algorithms.\\
 \tab Moreover, a distribution is helpful for future practical applications of our algorithm. For example, if a human moves an object and tells the robot ``it is 5 inches left of the car", the robot will want to scan intelligently in a particular area surrounding that point. Without a distribution, it only has the point itself to rely on. 
@@ -50,15 +48,14 @@ Our program has many applications, some of which are enumerated below:
 \begin{enumerate}[(1)]
 \item lets the user interact with the robot in placing tasks
 \item allows the user to specify a new location of an object if the object has moved
-\item allows the user to set waypoints that the robot could use for further tasks: e.g. if a user wanted to use a particular location in space that the robot could not detect using vision \\
-...... and many more
+\item allows the user to set waypoints that the robot could use for further tasks: e.g. if a user wanted to use a particular location in space that the robot could not detect using vision 
 \end{enumerate}
 
 Specifying spatial locations is an important problem that humans can solve, and would generalize into many other tasks in robotics. 
 
 \subsection{Roadmap}
 
-\textbf{Section 2} discusses our experiment that provided a human baseline for training and testing our algorithms. \textbf{Section 3} presents three different mathematical models that capture the problem \--- random, ``naive Gaussian", and a log linear model.  \textbf{Section 4} evaluates these models. \textbf{Section 5} discusses extensions of our model currently being worked on, as well as future research. \textbf{Section 6} concludes.
+\textbf{Section 2} discusses our experiment that provided a human baseline for training and testing our algorithms. \textbf{Section 3} presents a log linear model that creates a distribution over spatial coordinates given a command and world. There we derive four features of the model use MLE estimation to find their weights. \textbf{Section 4} evaluates this model with different features turned on and off. \textbf{Section 5} discusses extensions of our model currently being worked on, as well as future research. \textbf{Section 6} concludes.
 
 \section{Human Experiment}
 
@@ -76,7 +73,7 @@ We used a preliminary experiment, similar to the following one, to inform the fo
 
 \subsection{Method}
 
-Setup for our experiment consisted of a 3x4-feet whiteboard, on which three objects were taped. Subjects were prompted with twelve commands referring to points on the whiteboard relative to the objects; for each command, they placed a dot on the point on the whiteboard that they thought the expression referred. Each command was of the following form, and drawn from the sets below:\\
+Setup for our experiment consisted of a 3x4-foot whiteboard, on which three objects were taped. Subjects were prompted with twelve commands referring to points on the whiteboard relative to the objects; for each command, they placed a dot on the point on the whiteboard that they thought the expression referred. Each command was of the following form, and drawn from the sets below:\\
 
 \noindent \textbf{Number} \tab	\textbf{Measurement}	 \tab	\textbf{Relation} \tab		\textbf{Object}\\
 five		\tab \tab  	inches	\tab\tab\tab   	behind	\tab	 	the car\\
@@ -89,10 +86,12 @@ five		\tab \tab  	inches	\tab\tab\tab   	behind	\tab	 	the car\\
 For our purposes, the \textbf{world} consists only of the whiteboard as a two dimensional object. The \textbf{walls} in this setup were the sides of the whiteboard, and the \textbf{objects} were the three objects taped to it in each experiment.\\
 \tab Our preliminary experiment told us that certain expressions like ``in front of" and ``behind" are interpreted differently when the whiteboard is placed at different heights. Therefore, the whiteboard was elevated at a consistent height to mimic the \textbf{table} on which Baxter sits in the H2R Lab. This way, a human would interact with the white board in the same way Baxter would.\\
 \tab A picture of the outcome of a particular experiment is below:
-\begin{center}
+\begin{figure}[H]
+\centering
 \includegraphics[scale=.1]{"images/scene1"}
-\end{center}
-As one can see, the subject placed the number of the command next to each dot: this allowed us to collect data after each experiment.\\ 
+\caption{Outcome of one trial of the experiment. Points are numbered with the corresponding command number to allow us to collect data afterwards.}
+\label{fig:experiment}
+\end{figure}
 \tab There were four scenes, each with different configuration of objects and different commands. Scene 1 and 2 involved no rotation of the large object (the lid/keyboard); scene 3 and 4 involved rotation of the lid/keyboard. Information about these scenes shown in the following table: \\
 
 
@@ -113,7 +112,13 @@ Results from this experiment were informative in many ways, enumerated below:
 
 \begin{enumerate}[(1)]
 \item Points were measured from edge of the object (as opposed to its center)
-\item Variance appears to scale linearly with distance [picture]
+\item Variance appears to scale linearly with distance
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{images/varplot.png}
+\caption{Plot of variance versus command distance}
+\label{fig:varplot}
+\end{figure}
 \item Most subjects underestimated the point when objects fell in the path of the measurement, or the point was closer to another object than the one referenced in the command. That is, underestimated relative to their other estimations, and the ``real point" (measured with a ruler from the edge of the object)
 
 \item Most subjects underestimated the point when walls fell in the path of measurement, or used an intrinsic frame of reference where they usually would have used a relative frame of reference.
@@ -153,14 +158,9 @@ The naive mean, $\hat{\mu}$, is what is obtained by going exactly the distance s
 \]
 
 \subsubsection{Calculating $T_1$ and $T_2$}
-$T_1$ and $T_2$ create a gaussian-like distribution around the naive mean $\hat{\mu}$. $T_1$ penalizes points based on squared distance from $\hat{\mu}$ \emph{in the direction of the command} (e.g. if the direction is `left', then $T_1$ penalizes points based on squared distance from $\hat{\mu}$ in the $x$-axis). In addition, $T_1$ penalizes less if the command is a longer distance (e.g. 1 foot) than if it is a shorter distance (e.g. 1 inch). To experimentally verify this assumption, we fit a line to the empirical Gaussian variances for all commands in experiment 1 (Figure \ref{fig:varplot}). The weighting for this variance, however, was computed using the MLE method described below. $T_2$ penalizes points based on squared distance from $\hat{\mu}$ in the orthogonal direction (e.g. if the direction is `left', then $T_2$ penalizes points based on squared distance from $\hat{\mu}$ in the $y$-axis). \\
-
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.5]{images/varplot.png}
-\caption{Plot of variance versus command distance}
-\label{fig:varplot}
-\end{figure}
+$T_1$ and $T_2$ create a gaussian-like distribution around the naive mean $\hat{\mu}$. $T_1$ penalizes points based on squared distance from $\hat{\mu}$ \emph{in the direction of the command} (e.g. if the direction is `left', then $T_1$ penalizes points based on squared distance from $\hat{\mu}$ in the $x$-axis). In addition, $T_1$ penalizes less if the command is a longer distance (e.g. 1 foot) than if it is a shorter distance (e.g. 1 inch). To experimentally verify this assumption, we fit a line to the empirical Gaussian variances for all commands in experiment 1 (Figure \ref{fig:varplot}). The weighting for this variance, however, was computed using the MLE method described below. \\
+\\
+$T_2$ penalizes points based on squared distance from $\hat{\mu}$ in the orthogonal direction (e.g. if the direction is `left', then $T_2$ penalizes points based on squared distance from $\hat{\mu}$ in the $y$-axis). \\
 
 To arrive at these features, we make three assumptions about the data. First, that the data are distributed in a gaussian manner. Second, that the variance in the direction of the command (i.e. in the $x$ direction for `left' or `right' and the $y$ direction for `in front' and `behind') is independent of the variance in the orthogonal direction. Third, that variance in the direction of the command scales linearly with the distance of the command, while variance in the orthogonal direction is constant. \\
 \\
