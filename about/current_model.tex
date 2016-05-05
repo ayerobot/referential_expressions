@@ -86,10 +86,12 @@ five		\tab \tab  	inches	\tab\tab\tab   	behind	\tab	 	the car\\
 For our purposes, the \textbf{world} consists only of the whiteboard as a two dimensional object. The \textbf{walls} in this setup were the sides of the whiteboard, and the \textbf{objects} were the three objects taped to it in each experiment.\\
 \tab Our preliminary experiment told us that certain expressions like ``in front of" and ``behind" are interpreted differently when the whiteboard is placed at different heights. Therefore, the whiteboard was elevated at a consistent height to mimic the \textbf{table} on which Baxter sits in the H2R Lab. This way, a human would interact with the white board in the same way Baxter would.\\
 \tab A picture of the outcome of a particular experiment is below:
-\begin{center}
+\begin{figure}[H]
+\centering
 \includegraphics[scale=.1]{"images/scene1"}
-\end{center}
-As one can see, the subject placed the number of the command next to each dot: this allowed us to collect data after each experiment.\\ 
+\caption{Outcome of one trial of the experiment. Points are numbered with the corresponding command number to allow us to collect data afterwards.}
+\label{fig:experiment}
+\end{figure}
 \tab There were four scenes, each with different configuration of objects and different commands. Scene 1 and 2 involved no rotation of the large object (the lid/keyboard); scene 3 and 4 involved rotation of the lid/keyboard. Information about these scenes shown in the following table: \\
 
 
@@ -110,7 +112,13 @@ Results from this experiment were informative in many ways, enumerated below:
 
 \begin{enumerate}[(1)]
 \item Points were measured from edge of the object (as opposed to its center)
-\item Variance appears to scale linearly with distance [picture]
+\item Variance appears to scale linearly with distance
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{images/varplot.png}
+\caption{Plot of variance versus command distance}
+\label{fig:varplot}
+\end{figure}
 \item Most subjects underestimated the point when objects fell in the path of the measurement, or the point was closer to another object than the one referenced in the command. That is, underestimated relative to their other estimations, and the ``real point" (measured with a ruler from the edge of the object)
 
 \item Most subjects underestimated the point when walls fell in the path of measurement, or used an intrinsic frame of reference where they usually would have used a relative frame of reference.
@@ -150,14 +158,9 @@ The naive mean, $\hat{\mu}$, is what is obtained by going exactly the distance s
 \]
 
 \subsubsection{Calculating $T_1$ and $T_2$}
-$T_1$ and $T_2$ create a gaussian-like distribution around the naive mean $\hat{\mu}$. $T_1$ penalizes points based on squared distance from $\hat{\mu}$ \emph{in the direction of the command} (e.g. if the direction is `left', then $T_1$ penalizes points based on squared distance from $\hat{\mu}$ in the $x$-axis). In addition, $T_1$ penalizes less if the command is a longer distance (e.g. 1 foot) than if it is a shorter distance (e.g. 1 inch). To experimentally verify this assumption, we fit a line to the empirical Gaussian variances for all commands in experiment 1 (Figure \ref{fig:varplot}). The weighting for this variance, however, was computed using the MLE method described below. $T_2$ penalizes points based on squared distance from $\hat{\mu}$ in the orthogonal direction (e.g. if the direction is `left', then $T_2$ penalizes points based on squared distance from $\hat{\mu}$ in the $y$-axis). \\
-
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.5]{images/varplot.png}
-\caption{Plot of variance versus command distance}
-\label{fig:varplot}
-\end{figure}
+$T_1$ and $T_2$ create a gaussian-like distribution around the naive mean $\hat{\mu}$. $T_1$ penalizes points based on squared distance from $\hat{\mu}$ \emph{in the direction of the command} (e.g. if the direction is `left', then $T_1$ penalizes points based on squared distance from $\hat{\mu}$ in the $x$-axis). In addition, $T_1$ penalizes less if the command is a longer distance (e.g. 1 foot) than if it is a shorter distance (e.g. 1 inch). To experimentally verify this assumption, we fit a line to the empirical Gaussian variances for all commands in experiment 1 (Figure \ref{fig:varplot}). The weighting for this variance, however, was computed using the MLE method described below. \\
+\\
+$T_2$ penalizes points based on squared distance from $\hat{\mu}$ in the orthogonal direction (e.g. if the direction is `left', then $T_2$ penalizes points based on squared distance from $\hat{\mu}$ in the $y$-axis). \\
 
 To arrive at these features, we make three assumptions about the data. First, that the data are distributed in a gaussian manner. Second, that the variance in the direction of the command (i.e. in the $x$ direction for `left' or `right' and the $y$ direction for `in front' and `behind') is independent of the variance in the orthogonal direction. Third, that variance in the direction of the command scales linearly with the distance of the command, while variance in the orthogonal direction is constant. \\
 \\
