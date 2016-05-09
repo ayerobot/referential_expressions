@@ -87,7 +87,7 @@ def visualize(data, world, commands, filename=None):
 		plt.scatter(estimated_pos[0], estimated_pos[1], c=np.array([0, 0, 0, 1]), marker='o')
 		plt.text(estimated_pos[0] + 0.25, estimated_pos[1] + 0.25, str(i))
 
-	plt.legend()
+	plt.legend(bbox_to_anchor=(1.1, 1.05))
 
 	if filename:
 		plt.savefig(filename, format='pdf')
@@ -190,6 +190,7 @@ def visualize_all_distributions(data, commands, algorithm, world, filename=None)
 
 # algorithm is a string, either 'cheating', 'random', or 'naive'
 #loglin algorithms are stored in a different way, easier to just create a new function
+#
 def visualize_all_loglin(data, commands, feature_name, world, filename=None):
 	fig = plt.figure(figsize=(18, 8))
 	fig.subplots_adjust(hspace=0.5)
@@ -198,7 +199,7 @@ def visualize_all_loglin(data, commands, feature_name, world, filename=None):
 		feats, weights = loglin_distributions[feature_name]
 		distributions = {cmdnum : LoglinDistribution(commands[cmdnum], world, w=weights, feats=feats) for cmdnum in commands}
 	else:
-		raise ValueError("Unknown Feature Set: " + str(algorithm))
+		raise ValueError("Unknown Feature Set: " + str(feature_name))
 
 	for i in range(1, 13):
 		plt.subplot(3, 4, i)
@@ -265,7 +266,8 @@ if __name__ == '__main__':
 				visualize_all_distributions(data, commands, sys.argv[2], world, sys.argv[4])
 			elif sys.argv[2] == 'loglin':
 				if sys.argv[3] == 'compare':
-					names = ['naive', 'naive_dist', 'naive_objects', 'naive_objects_walls'] #to make sure the names stay in the same order
+					#fourth argument should be the command 
+					names = ['Gaussian fit', 'T1,T2', 'T1,T2,T3', 'T1,T2,T3,T4'] #to make sure the names stay in the same order
 					compare_all_loglin(data, commands, int(sys.argv[4]), world, names)
 				else:
 					visualize_all_loglin(data, commands, sys.argv[3], world)
@@ -275,5 +277,6 @@ if __name__ == '__main__':
 			print "Saved"
 			visualize(data, world, commands, sys.argv[3])
 		else:
-			#visualize(data, world, commands)
-			visualize_command(data, world, commands, 11)
+			visualize(data, world, commands)
+			#visualize_distribution(data[1], world, commands, 1)
+			#visualize_command(data, world, commands, 12)
